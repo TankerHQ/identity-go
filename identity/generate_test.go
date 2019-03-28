@@ -25,9 +25,25 @@ var _ = Describe("generate", func() {
 		id := &identity{}
 		err = b64json.Decode(*identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
+		Expect(id.Target).Should(Equal("user"))
 	})
 
-	It("parses a valid identity", func() {
+	It("generates a valid provisional identity in b64 form", func() {
+		identityB64, err := CreateProvisional(trustchainConfig, "email@example.com")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		id := &provisionalIdentity{}
+		err = b64json.Decode(*identityB64, id)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(id.Target).Should(Equal("email"))
+		Expect(id.Value).Should(Equal("email@example.com"))
+		Expect(id.PrivateEncryptionKey).ShouldNot(BeEmpty())
+		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
+		Expect(id.PrivateSignatureKey).ShouldNot(BeEmpty())
+		Expect(id.PublicSignatureKey).ShouldNot(BeEmpty())
+	})
+
+	It("creates a valid public identity from an identity", func() {
 		publicId, err := GetPublicIdentity(goodIdentity)
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -37,5 +53,22 @@ var _ = Describe("generate", func() {
 		extractedGoodPublicID := &publicIdentity{}
 		b64json.Decode(goodPublicIdentity, extractedGoodPublicID)
 		Expect(*extractedGoodPublicID).Should(Equal(*extractedPublicID))
+	})
+
+	It("creates a valid public identity from a provisional identity", func() {
+		identityB64, err := CreateProvisional(trustchainConfig, "email@example.com")
+		Expect(err).ShouldNot(HaveOccurred())
+
+		provisionalID := &provisionalIdentity{}
+		b64json.Decode(*identityB64, provisionalID)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		publicId, err := GetPublicIdentity(*identityB64)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		extractedPublicID := &publicProvisionalIdentity{}
+		b64json.Decode(*publicId, extractedPublicID)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(*extractedPublicID).Should(Equal(provisionalID.publicProvisionalIdentity))
 	})
 })
