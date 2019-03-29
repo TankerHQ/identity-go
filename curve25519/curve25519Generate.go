@@ -1,0 +1,23 @@
+package curve25519
+
+import (
+	"crypto/rand"
+
+	"golang.org/x/crypto/curve25519"
+)
+
+func GenerateKey() ([]byte, []byte, error) {
+	sk := [32]byte{}
+	if _, err := rand.Read(sk[:]); err != nil {
+		return nil, nil, err
+	}
+
+	sk[0] &= 248
+	sk[31] &= 127
+	sk[31] |= 64
+
+	pk := [32]byte{}
+	curve25519.ScalarBaseMult(&pk, &sk)
+
+	return sk[:], pk[:], nil
+}
