@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-func GenerateKey() ([]byte, []byte, error) {
+func GenerateKey() (PublicKey []byte, PrivateKey []byte, Error error) {
 	sk := [32]byte{}
 	if _, err := rand.Read(sk[:]); err != nil {
 		return nil, nil, err
@@ -19,5 +19,5 @@ func GenerateKey() ([]byte, []byte, error) {
 	pk := [32]byte{}
 	curve25519.ScalarBaseMult(&pk, &sk)
 
-	return sk[:], pk[:], nil
+	return pk[:], sk[:], nil
 }
