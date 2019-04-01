@@ -37,7 +37,7 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 	userID := hashUserID(config.TrustchainID, userIDString)
 	userSecret := createUserSecret(userID)
 
-	eprivSignKey, epubSignKey, err := ed25519.GenerateKey(nil)
+	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -62,11 +62,11 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 }
 
 func generateProvisionalIdentity(config config, email string) (*provisionalIdentity, error) {
-	privateSignatureKey, publicSignatureKey, err := ed25519.GenerateKey(nil)
+	publicSignatureKey, privateSignatureKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, err
 	}
-	privateEncryptionKey, publicEncryptionKey, err := curve25519.GenerateKey()
+	publicEncryptionKey, privateEncryptionKey, err := curve25519.GenerateKey()
 	if err != nil {
 		return nil, err
 	}
