@@ -31,7 +31,12 @@ func CreateProvisional(config Config, email string) (*string, error) {
 }
 
 func GetPublicIdentity(b64Identity string) (*string, error) {
-	publicIdentity := &publicProvisionalIdentity{}
+	type anyPublicIdentity struct {
+		publicIdentity
+		PublicSignatureKey  []byte `json:"public_signature_key,omitempty"`
+		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
+	}
+	publicIdentity := &anyPublicIdentity{}
 	err := b64json.Decode(b64Identity, publicIdentity)
 	if err != nil {
 		return nil, err
