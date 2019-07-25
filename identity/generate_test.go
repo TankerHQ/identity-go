@@ -48,10 +48,10 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicIdentity{}
-		b64json.Decode(*publicId, extractedPublicID)
+		_ = b64json.Decode(*publicId, extractedPublicID)
 
 		extractedGoodPublicID := &publicIdentity{}
-		b64json.Decode(goodPublicIdentity, extractedGoodPublicID)
+		_ = b64json.Decode(goodPublicIdentity, extractedGoodPublicID)
 		Expect(*extractedGoodPublicID).Should(Equal(*extractedPublicID))
 	})
 
@@ -60,14 +60,14 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}
-		b64json.Decode(*identityB64, provisionalID)
+		_ = b64json.Decode(*identityB64, provisionalID)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		publicId, err := GetPublicIdentity(*identityB64)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicProvisionalIdentity{}
-		b64json.Decode(*publicId, extractedPublicID)
+		_ = b64json.Decode(*publicId, extractedPublicID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(*extractedPublicID).Should(Equal(provisionalID.publicProvisionalIdentity))
 	})
