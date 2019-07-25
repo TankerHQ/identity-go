@@ -36,7 +36,7 @@ var _ = Describe("generateIdentity", func() {
 	BeforeEach(func() {
 		trustchainPublicKey, trustchainPrivateKey, _ = ed25519.GenerateKey(nil)
 		trustchainID = make([]byte, 32)
-		rand.Read(trustchainID)
+		_, _ = rand.Read(trustchainID)
 		obfuscatedUserID = hashUserID(trustchainID, userID)
 		conf = config{
 			TrustchainID:         trustchainID,

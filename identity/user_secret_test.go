@@ -21,7 +21,7 @@ var _ = Describe("Hash", func() {
 		if err != nil {
 			panic("hash failed: " + err.Error())
 		}
-		hash.Write(input)
+		_, _ = hash.Write(input)
 		output := hash.Sum([]byte{})
 		Expect(output).To(Equal(vector))
 	})

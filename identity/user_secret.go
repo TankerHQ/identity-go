@@ -16,7 +16,7 @@ func hashUserID(trustchainID []byte, userIDString string) []byte {
 
 func createUserSecret(userID []byte) []byte {
 	randdata := make([]byte, userSecretSize-1)
-	rand.Read(randdata)
+	_, _ = rand.Read(randdata)
 	check := oneByteGenericHash(append(randdata, userID...))
 	return append(randdata, check)
 }
@@ -26,6 +26,6 @@ func oneByteGenericHash(input []byte) byte {
 	if err != nil {
 		panic("hash failed: " + err.Error())
 	}
-	hash.Write(input)
+	_, _ = hash.Write(input)
 	return hash.Sum([]byte{})[0]
 }
