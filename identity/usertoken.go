@@ -14,8 +14,8 @@ type userToken struct {
 	UserSecret                   []byte `json:"user_secret"`
 }
 
-func (this userToken) upgrade(trustchainID []byte, userID string) (*identity, error) {
-	obfuscatedUserID := hashUserID(trustchainID, userID)
+func (this userToken) upgrade(appID []byte, userID string) (*identity, error) {
+	obfuscatedUserID := hashUserID(appID, userID)
 
 	if subtle.ConstantTimeCompare(obfuscatedUserID, this.UserID) == 0 {
 		return nil, errors.New("Invalid userid")
@@ -23,7 +23,7 @@ func (this userToken) upgrade(trustchainID []byte, userID string) (*identity, er
 
 	id := identity{
 		publicIdentity: publicIdentity{
-			TrustchainID: trustchainID,
+			TrustchainID: appID,
 			Target:       "user",
 			Value:        base64.StdEncoding.EncodeToString(this.UserID),
 		},

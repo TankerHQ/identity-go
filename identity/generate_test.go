@@ -12,14 +12,14 @@ var _ = Describe("generate", func() {
 
 		goodPublicIdentity = "eyJ0YXJnZXQiOiJ1c2VyIiwidHJ1c3RjaGFpbl9pZCI6InRwb3h5TnpoMGhVOUcyaTlhZ012SHl5ZCtwTzZ6R0NqTzlCZmhyQ0xqZDQ9IiwidmFsdWUiOiJSRGEwZXE0WE51ajV0VjdoZGFwak94aG1oZVRoNFFCRE5weTRTdnk5WG9rPSJ9"
 
-		trustchainConfig = Config{
-			TrustchainID:         "tpoxyNzh0hU9G2i9agMvHyyd+pO6zGCjO9BfhrCLjd4=",
-			TrustchainPrivateKey: "cTMoGGUKhwN47ypq4xAXAtVkNWeyUtMltQnYwJhxWYSvqjPVGmXd2wwa7y17QtPTZhn8bxb015CZC/e4ZI7+MQ==",
+		appConfig = Config{
+			AppID:     "tpoxyNzh0hU9G2i9agMvHyyd+pO6zGCjO9BfhrCLjd4=",
+			AppSecret: "cTMoGGUKhwN47ypq4xAXAtVkNWeyUtMltQnYwJhxWYSvqjPVGmXd2wwa7y17QtPTZhn8bxb015CZC/e4ZI7+MQ==",
 		}
 	)
 
 	It("generates a valid identity in b64 form", func() {
-		identityB64, err := Create(trustchainConfig, "userID")
+		identityB64, err := Create(appConfig, "userID")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &identity{}
@@ -29,7 +29,7 @@ var _ = Describe("generate", func() {
 	})
 
 	It("generates a valid provisional identity in b64 form", func() {
-		identityB64, err := CreateProvisional(trustchainConfig, "email@example.com")
+		identityB64, err := CreateProvisional(appConfig, "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
@@ -56,7 +56,7 @@ var _ = Describe("generate", func() {
 	})
 
 	It("creates a valid public identity from a provisional identity", func() {
-		identityB64, err := CreateProvisional(trustchainConfig, "email@example.com")
+		identityB64, err := CreateProvisional(appConfig, "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}

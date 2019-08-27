@@ -60,7 +60,7 @@ func UpgradeUserToken(config Config, userID string, userTokenString string) (*st
 		return nil, err2
 	}
 
-	identity, err := userToken.upgrade(conf.TrustchainID, userID)
+	identity, err := userToken.upgrade(conf.AppID, userID)
 	if err != nil {
 		return nil, err
 	}

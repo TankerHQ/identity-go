@@ -6,26 +6,26 @@ import (
 )
 
 type Config struct {
-	TrustchainID         string
-	TrustchainPrivateKey string
+	AppID     string
+	AppSecret string
 }
 
 type config struct {
-	TrustchainID         []byte
-	TrustchainPrivateKey []byte
+	AppID     []byte
+	AppSecret []byte
 }
 
 func (this Config) fromB64() (*config, error) {
-	truschainIDBytes, err := base64.StdEncoding.DecodeString(this.TrustchainID)
+	appIDBytes, err := base64.StdEncoding.DecodeString(this.AppID)
 	if err != nil {
-		return nil, errors.New("Wrong trustchainID format, should be base64: " + this.TrustchainID)
+		return nil, errors.New("Wrong AppID format, should be base64: " + this.AppID)
 	}
-	trustchainPrivKeyBytes, err := base64.StdEncoding.DecodeString(this.TrustchainPrivateKey)
+	appSecretBytes, err := base64.StdEncoding.DecodeString(this.AppSecret)
 	if err != nil {
-		return nil, errors.New("Wrong trustchainPrivateKey format, should be base64: " + this.TrustchainPrivateKey)
+		return nil, errors.New("Wrong AppSecret format, should be base64: " + this.AppSecret)
 	}
 	return &config{
-		TrustchainID:         truschainIDBytes,
-		TrustchainPrivateKey: trustchainPrivKeyBytes,
+		AppID:     appIDBytes,
+		AppSecret: appSecretBytes,
 	}, nil
 }
