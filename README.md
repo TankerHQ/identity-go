@@ -67,7 +67,7 @@ func getPublicIdentity(string userID) (string, error) {
 }
 ```
 
-Read more about identities in the [Tanker guide](https://tanker.io/docs/latest/guide/user-token/).
+Read more about identities in the [Tanker guide](https://docs.tanker.io/core/latest/guide/adapting-server-code/).
 
 ## Development
 
