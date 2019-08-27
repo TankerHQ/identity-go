@@ -1,4 +1,4 @@
-# Identity [![Travis][build-badge]][build]
+# Identity [![Travis][build-badge]][build] [![GoDoc][doc-badge]][doc]
 
 Identity generation in Go for the [Tanker SDK](https://tanker.io/docs/latest).
 
@@ -83,3 +83,5 @@ Bug reports and pull requests are welcome on GitHub at https://github.com/Tanker
 
 [build-badge]: https://travis-ci.org/TankerHQ/identity-go.svg?branch=master
 [build]: https://travis-ci.org/TankerHQ/identity-go
+[doc-badge]: https://godoc.org/github.com/identity-go/identity?status.svg
+[doc]: https://godoc.org/github.com/identity-go/identity
