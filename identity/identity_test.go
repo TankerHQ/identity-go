@@ -25,29 +25,29 @@ func checkDelegationSignature(identity identity, trustchainPublicKey []byte) {
 
 var _ = Describe("generateIdentity", func() {
 	var (
-		trustchainPublicKey  []byte
-		trustchainPrivateKey []byte
-		trustchainID         []byte
-		conf                 config
-		userID               = "userID"
-		obfuscatedUserID     []byte
+		trustchainPublicKey []byte
+		AppSecret           []byte
+		AppID               []byte
+		conf                config
+		userID              = "userID"
+		obfuscatedUserID    []byte
 	)
 
 	BeforeEach(func() {
-		trustchainPublicKey, trustchainPrivateKey, _ = ed25519.GenerateKey(nil)
-		trustchainID = make([]byte, 32)
-		_, _ = rand.Read(trustchainID)
-		obfuscatedUserID = hashUserID(trustchainID, userID)
+		trustchainPublicKey, AppSecret, _ = ed25519.GenerateKey(nil)
+		AppID = make([]byte, 32)
+		_, _ = rand.Read(AppID)
+		obfuscatedUserID = hashUserID(AppID, userID)
 		conf = config{
-			TrustchainID:         trustchainID,
-			TrustchainPrivateKey: trustchainPrivateKey,
+			AppID:     AppID,
+			AppSecret: AppSecret,
 		}
 	})
 
 	It("generateIdentity returns a valid tanker identity", func() {
 		identity, err := generateIdentity(conf, userID)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(identity.TrustchainID).To(Equal(trustchainID))
+		Expect(identity.TrustchainID).To(Equal(AppID))
 		Expect(identity.Target).To(Equal("user"))
 		Expect(identity.Value).To(Equal(base64.StdEncoding.EncodeToString(obfuscatedUserID)))
 		checkDelegationSignature(*identity, trustchainPublicKey)
@@ -57,7 +57,7 @@ var _ = Describe("generateIdentity", func() {
 		provisionalIdentity, err := generateProvisionalIdentity(conf, "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
-		Expect(provisionalIdentity.TrustchainID).To(Equal(trustchainID))
+		Expect(provisionalIdentity.TrustchainID).To(Equal(AppID))
 		Expect(provisionalIdentity.Target).To(Equal("email"))
 		Expect(provisionalIdentity.Value).To(Equal("email@example.com"))
 	})

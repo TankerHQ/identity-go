@@ -18,8 +18,8 @@ import (
 )
 
 config := identity.Config {
-    TrustchainID: "<trustchain-id>",
-    TrustchainPrivateKey: "<trustchain-private-key>",
+    AppID: "<app-id>",
+    AppSecret: "<app-secret>",
 }
 
 // Example server-side function in which you would implement checkAuth(),

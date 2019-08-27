@@ -34,7 +34,7 @@ type provisionalIdentity struct {
 }
 
 func generateIdentity(config config, userIDString string) (*identity, error) {
-	userID := hashUserID(config.TrustchainID, userIDString)
+	userID := hashUserID(config.AppID, userIDString)
 	userSecret := createUserSecret(userID)
 
 	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
@@ -44,11 +44,11 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 
 	payload := append(epubSignKey, userID...)
 
-	delegationSignature := ed25519.Sign(config.TrustchainPrivateKey, payload)
+	delegationSignature := ed25519.Sign(config.AppSecret, payload)
 
 	identity := identity{
 		publicIdentity: publicIdentity{
-			TrustchainID: config.TrustchainID,
+			TrustchainID: config.AppID,
 			Target:       "user",
 			Value:        base64.StdEncoding.EncodeToString(userID),
 		},
@@ -74,7 +74,7 @@ func generateProvisionalIdentity(config config, email string) (*provisionalIdent
 	provisionalIdentity := provisionalIdentity{
 		publicProvisionalIdentity: publicProvisionalIdentity{
 			publicIdentity: publicIdentity{
-				TrustchainID: config.TrustchainID,
+				TrustchainID: config.AppID,
 				Target:       "email",
 				Value:        email,
 			},
