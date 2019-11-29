@@ -1,4 +1,4 @@
-# Identity [![Travis][build-badge]][build] [![GoDoc][doc-badge]][doc]
+# Identity [![Actions Status](https://github.com/TankerHQ/identity-go/workflows/Tests/badge.svg)](https://github.com/TankerHQ/identity-go/actions) [![codecov](https://codecov.io/gh/TankerHQ/identity-go/branch/master/graph/badge.svg)](https://codecov.io/gh/TankerHQ/identity-go) [![GoDoc][doc-badge]][doc]
 
 Identity generation in Go for the [Tanker SDK](https://tanker.io/docs/latest).
 
