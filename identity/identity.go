@@ -1,7 +1,9 @@
 package identity
 
 import (
+	"bytes"
 	"encoding/base64"
+	"errors"
 
 	"github.com/TankerHQ/identity-go/curve25519"
 	"golang.org/x/crypto/ed25519"
@@ -34,6 +36,12 @@ type provisionalIdentity struct {
 }
 
 func generateIdentity(config config, userIDString string) (*identity, error) {
+	generatedAppID := generateAppID(config.AppSecret)
+
+	if !bytes.Equal(generatedAppID, config.AppID) {
+		return nil, errors.New("App secret and app ID mismatch")
+	}
+
 	userID := hashUserID(config.AppID, userIDString)
 	userSecret := createUserSecret(userID)
 
