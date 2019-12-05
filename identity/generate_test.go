@@ -44,11 +44,11 @@ var _ = Describe("generate", func() {
 	})
 
 	It("creates a valid public identity from an identity", func() {
-		publicId, err := GetPublicIdentity(goodIdentity)
+		publicID, err := GetPublicIdentity(goodIdentity)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicIdentity{}
-		_ = b64json.Decode(*publicId, extractedPublicID)
+		_ = b64json.Decode(*publicID, extractedPublicID)
 
 		extractedGoodPublicID := &publicIdentity{}
 		_ = b64json.Decode(goodPublicIdentity, extractedGoodPublicID)
@@ -63,11 +63,11 @@ var _ = Describe("generate", func() {
 		_ = b64json.Decode(*identityB64, provisionalID)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		publicId, err := GetPublicIdentity(*identityB64)
+		publicID, err := GetPublicIdentity(*identityB64)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicProvisionalIdentity{}
-		_ = b64json.Decode(*publicId, extractedPublicID)
+		_ = b64json.Decode(*publicID, extractedPublicID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(*extractedPublicID).Should(Equal(provisionalID.publicProvisionalIdentity))
 	})
