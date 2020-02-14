@@ -48,21 +48,3 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 	return b64json.Encode(publicIdentity)
 }
-
-func UpgradeUserToken(config Config, userID string, userTokenString string) (*string, error) {
-	conf, err := config.fromB64()
-	if err != nil {
-		return nil, err
-	}
-
-	userToken := &userToken{}
-	if err2 := b64json.Decode(userTokenString, userToken); err2 != nil {
-		return nil, err2
-	}
-
-	identity, err := userToken.upgrade(conf.AppID, userID)
-	if err != nil {
-		return nil, err
-	}
-	return b64json.Encode(*identity)
-}
