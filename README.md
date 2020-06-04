@@ -1,4 +1,8 @@
-# Identity [![Actions Status](https://github.com/TankerHQ/identity-go/workflows/Tests/badge.svg)](https://github.com/TankerHQ/identity-go/actions) [![codecov](https://codecov.io/gh/TankerHQ/identity-go/branch/master/graph/badge.svg)](https://codecov.io/gh/TankerHQ/identity-go) [![GoDoc][doc-badge]][doc]
+<a href="#readme"><img src="https://tanker.io/images/github-logo.png" alt="Tanker logo" width="180" /></a>
+
+# Identity SDK
+
+[![Actions Status](https://github.com/TankerHQ/identity-go/workflows/Tests/badge.svg)](https://github.com/TankerHQ/identity-go/actions) [![codecov](https://codecov.io/gh/TankerHQ/identity-go/branch/master/graph/badge.svg)](https://codecov.io/gh/TankerHQ/identity-go) [![GoDoc][doc-badge]][doc]
 
 Identity generation in Go for the [Tanker SDK](https://tanker.io/docs/latest).
 
