@@ -4,7 +4,7 @@
 
 [![Actions Status](https://github.com/TankerHQ/identity-go/workflows/Tests/badge.svg)](https://github.com/TankerHQ/identity-go/actions) [![codecov](https://codecov.io/gh/TankerHQ/identity-go/branch/master/graph/badge.svg)](https://codecov.io/gh/TankerHQ/identity-go) [![GoDoc][doc-badge]][doc]
 
-Identity generation in Go for the [Tanker SDK](https://tanker.io/docs/latest).
+Identity generation in Go for the [Tanker SDK](https://docs.tanker.io/latest/).
 
 ## Installation
 
@@ -72,7 +72,7 @@ func getPublicIdentity(userID string) (*string, error) {
 }
 ```
 
-Read more about identities in the [Tanker guide](https://docs.tanker.io/core/latest/guide/adapting-server-code/).
+Read more about identities in the [Tanker guide](https://docs.tanker.io/latest/guides/identity-management/).
 
 ## Development
 
