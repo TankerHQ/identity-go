@@ -1,6 +1,8 @@
 package identity
 
 import (
+	"encoding/base64"
+
 	"github.com/TankerHQ/identity-go/b64json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -12,9 +14,12 @@ var _ = Describe("generate", func() {
 
 		goodPublicIdentity = "eyJ0YXJnZXQiOiJ1c2VyIiwidHJ1c3RjaGFpbl9pZCI6InRwb3h5TnpoMGhVOUcyaTlhZ012SHl5ZCtwTzZ6R0NqTzlCZmhyQ0xqZDQ9IiwidmFsdWUiOiJSRGEwZXE0WE51ajV0VjdoZGFwak94aG1oZVRoNFFCRE5weTRTdnk5WG9rPSJ9"
 
+		appID     = "tpoxyNzh0hU9G2i9agMvHyyd+pO6zGCjO9BfhrCLjd4="
+		appSecret = "cTMoGGUKhwN47ypq4xAXAtVkNWeyUtMltQnYwJhxWYSvqjPVGmXd2wwa7y17QtPTZhn8bxb015CZC/e4ZI7+MQ=="
+
 		appConfig = Config{
-			AppID:     "tpoxyNzh0hU9G2i9agMvHyyd+pO6zGCjO9BfhrCLjd4=",
-			AppSecret: "cTMoGGUKhwN47ypq4xAXAtVkNWeyUtMltQnYwJhxWYSvqjPVGmXd2wwa7y17QtPTZhn8bxb015CZC/e4ZI7+MQ==",
+			AppID:     appID,
+			AppSecret: appSecret,
 		}
 	)
 
@@ -26,6 +31,20 @@ var _ = Describe("generate", func() {
 		err = b64json.Decode(*identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("user"))
+	})
+
+	It("returns an error if the App secret is a valid base64 string but has an incorrect size", func() {
+		invalidAppSecret := base64.StdEncoding.EncodeToString([]byte{0xaa})
+		invalidConf := Config{AppID: appID, AppSecret: invalidAppSecret}
+		_, err := Create(invalidConf, "email@example.com")
+		Expect(err).Should(HaveOccurred())
+	})
+
+	It("returns an error if the App ID is a valid base64 string but has an incorrect size", func() {
+		invalidAppID := base64.StdEncoding.EncodeToString([]byte{0xaa, 0xbb, 0xcc})
+		invalidConf := Config{AppID: invalidAppID, AppSecret: appSecret}
+		_, err := Create(invalidConf, "email@example.com")
+		Expect(err).Should(HaveOccurred())
 	})
 
 	It("generates a valid provisional identity in b64 form", func() {
