@@ -65,7 +65,7 @@ var _ = Describe("generateIdentity", func() {
 		Expect(provisionalIdentity.Value).To(Equal("email@example.com"))
 	})
 
-	It("throws if app ID and secret mismatch", func() {
+	It("returns an error if app ID and secret mismatch", func() {
 		mismatchingAppIDStr := "rB0/yEJWCUVYRtDZLtXaJqtneXQOsCSKrtmWw+V+ysc="
 		mismatchingAppID, _ := base64.StdEncoding.DecodeString(mismatchingAppIDStr)
 		invalidConf := config{AppID: mismatchingAppID, AppSecret: conf.AppSecret}
