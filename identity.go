@@ -1,9 +1,10 @@
 package identity
 
 import (
+	"crypto/rand"
 	"errors"
 
-	"github.com/TankerHQ/identity-go/b64json"
+	"golang.org/x/crypto/curve25519"
 )
 
 func Create(config Config, userID string) (*string, error) {
@@ -15,7 +16,7 @@ func Create(config Config, userID string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b64json.Encode(identity)
+	return Base64Encode(identity)
 }
 
 func CreateProvisional(config Config, email string) (*string, error) {
@@ -27,7 +28,7 @@ func CreateProvisional(config Config, email string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b64json.Encode(identity)
+	return Base64Encode(identity)
 }
 
 func GetPublicIdentity(b64Identity string) (*string, error) {
@@ -37,14 +38,30 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
 	publicIdentity := &anyPublicIdentity{}
-	err := b64json.Decode(b64Identity, publicIdentity)
+	err := Base64Decode(b64Identity, publicIdentity)
 	if err != nil {
 		return nil, err
 	}
 
 	if publicIdentity.Target != "user" && publicIdentity.Target != "email" {
-		return nil, errors.New("Unsupported identity target")
+		return nil, errors.New("unsupported identity target")
 	}
 
-	return b64json.Encode(publicIdentity)
+	return Base64Encode(publicIdentity)
+}
+
+func GenerateKey() (PublicKey []byte, PrivateKey []byte, Error error) {
+	sk := [32]byte{}
+	if _, err := rand.Read(sk[:]); err != nil {
+		return nil, nil, err
+	}
+
+	sk[0] &= 248
+	sk[31] &= 127
+	sk[31] |= 64
+
+	pk := [32]byte{}
+	curve25519.ScalarBaseMult(&pk, &sk)
+
+	return pk[:], sk[:], nil
 }
