@@ -6,7 +6,21 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-const userSecretSize = 32
+const (
+	AppSecretSize     = 64
+	AppPublicKeySize  = 32
+	userSecretSize    = 32
+	appCreationNature = 1
+)
+
+func generateAppID(appSecret []byte) []byte {
+	publicKey := appSecret[AppSecretSize-AppPublicKeySize : AppSecretSize]
+	author := make([]byte, 32)
+	payload := append([]byte{appCreationNature}, author...)
+	payload = append(payload, publicKey...)
+	hashed := blake2b.Sum256(payload)
+	return hashed[:]
+}
 
 func hashUserID(trustchainID []byte, userIDString string) []byte {
 	userIDBuffer := append([]byte(userIDString), trustchainID...)
