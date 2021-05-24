@@ -44,6 +44,38 @@ var _ = Describe("generate", func() {
 		Expect(goodPermanentIdentity).Should(Equal(*orderedJson))
 	})
 
+	It("can upgrade an identity", func() {
+		identity, _ := Create(appConfig, "userID")
+		publicIdentity, _ := GetPublicIdentity(*identity)
+		provIdentity, _ := CreateProvisional(appConfig, "userID@tanker.io")
+		publicProvIdentity, _ := GetPublicIdentity(*provIdentity)
+
+		identityJson, _ := base64.StdEncoding.DecodeString(*identity)
+		publicIdentityJson, _ := base64.StdEncoding.DecodeString(*publicIdentity)
+		provIdentityJson, _ := base64.StdEncoding.DecodeString(*provIdentity)
+		publicProvIdentityJson, _ := base64.StdEncoding.DecodeString(*publicProvIdentity)
+
+		upgradedIdentity, _ := UpgradeIdentity(*identity)
+		upgradedPublicIdentity, _ := UpgradeIdentity(*publicIdentity)
+		upgradedProvIdentity, _ := UpgradeIdentity(*provIdentity)
+		upgradedPublicProvIdentity, _ := UpgradeIdentity(*publicProvIdentity)
+
+		upgradedIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedIdentity)
+		upgradedPublicIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedPublicIdentity)
+		upgradedProvIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedProvIdentity)
+		upgradedPublicProvIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedPublicProvIdentity)
+
+		Expect(upgradedIdentityJson).Should(Equal(identityJson))
+		Expect(upgradedPublicIdentityJson).Should(Equal(publicIdentityJson))
+		Expect(upgradedProvIdentityJson).Should(Equal(provIdentityJson))
+		Expect(upgradedPublicProvIdentityJson).Should(Equal(publicProvIdentityJson))
+	})
+
+	It("can fail to upgrade an identity to make codecov happy", func() {
+		_, err := UpgradeIdentity("this is not going to deserialize very well")
+		Expect(err).Should(HaveOccurred())
+	})
+
 	It("returns an error if the App secret is a valid base64 string but has an incorrect size", func() {
 		invalidAppSecret := base64.StdEncoding.EncodeToString([]byte{0xaa})
 		invalidConf := Config{AppID: appID, AppSecret: invalidAppSecret}
