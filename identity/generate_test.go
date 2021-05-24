@@ -33,6 +33,18 @@ var _ = Describe("generate", func() {
 		Expect(id.Target).Should(Equal("user"))
 	})
 
+	It("generates ordered JSON for permanent identities", func() {
+		goodPermanentIdentity := "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJ1c2VyIiwidmFsdWUiOiJSRGEwZXE0WE51ajV0VjdoZGFwak94aG1oZVRoNFFCRE5weTRTdnk5WG9rPSIsImRlbGVnYXRpb25fc2lnbmF0dXJlIjoiVTlXUW9sQ3ZSeWpUOG9SMlBRbWQxV1hOQ2kwcW1MMTJoTnJ0R2FiWVJFV2lyeTUya1d4MUFnWXprTHhINmdwbzNNaUE5cisremhubW9ZZEVKMCtKQ3c9PSIsImVwaGVtZXJhbF9wdWJsaWNfc2lnbmF0dXJlX2tleSI6IlhoM2kweERUcHIzSFh0QjJRNTE3UUt2M2F6TnpYTExYTWRKRFRTSDRiZDQ9IiwiZXBoZW1lcmFsX3ByaXZhdGVfc2lnbmF0dXJlX2tleSI6ImpFRFQ0d1FDYzFERndvZFhOUEhGQ2xuZFRQbkZ1Rm1YaEJ0K2lzS1U0WnBlSGVMVEVOT212Y2RlMEhaRG5YdEFxL2RyTTNOY3N0Y3gwa05OSWZodDNnPT0iLCJ1c2VyX3NlY3JldCI6IjdGU2YvbjBlNzZRVDNzMERrdmV0UlZWSmhYWkdFak94ajVFV0FGZXh2akk9In0="
+
+		id := &identity{}
+		err := b64json.Decode(goodPermanentIdentity, id)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		orderedJson, _ := b64json.Encode(id)
+
+		Expect(goodPermanentIdentity).Should(Equal(*orderedJson))
+	})
+
 	It("returns an error if the App secret is a valid base64 string but has an incorrect size", func() {
 		invalidAppSecret := base64.StdEncoding.EncodeToString([]byte{0xaa})
 		invalidConf := Config{AppID: appID, AppSecret: invalidAppSecret}
