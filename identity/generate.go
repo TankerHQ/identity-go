@@ -48,3 +48,12 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 	return b64json.Encode(publicIdentity)
 }
+
+func UpgradeIdentity(b64Identity string) (*string, error) {
+	var identity interface{}
+	err := b64json.Decode(b64Identity, &identity)
+	if err != nil {
+		return nil, err
+	}
+	return b64json.Encode(identity)
+}
