@@ -13,7 +13,19 @@ func Encode(v interface{}) (*string, error) {
 		return nil, err
 	}
 
-	b64Token := base64.StdEncoding.EncodeToString(jsonToken)
+	// Struct fields are marshalled in order of declaration, but we can't easily change the order
+	// Map fields are always marshalled alphabetically, so bounce through a map to force the order
+	var objmap map[string]interface{}
+	err = json.Unmarshal(jsonToken, &objmap)
+	if err != nil {
+		return nil, err
+	}
+	orderedJson, err := json.Marshal(objmap)
+	if err != nil {
+		return nil, err
+	}
+
+	b64Token := base64.StdEncoding.EncodeToString(orderedJson)
 	return &b64Token, nil
 }
 

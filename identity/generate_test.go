@@ -2,6 +2,7 @@ package identity
 
 import (
 	"encoding/base64"
+	"encoding/json"
 
 	"github.com/TankerHQ/identity-go/b64json"
 	. "github.com/onsi/ginkgo"
@@ -31,6 +32,17 @@ var _ = Describe("generate", func() {
 		err = b64json.Decode(*identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("user"))
+	})
+
+	It("generates ordered JSON", func() {
+		identityB64, _ := Create(appConfig, "userID")
+		identityJson, _ := base64.StdEncoding.DecodeString(*identityB64)
+
+		var objmap map[string]interface{}
+		_ = json.Unmarshal(identityJson, &objmap)
+		orderedJson, _ := json.Marshal(objmap)
+
+		Expect(identityJson).Should(Equal(orderedJson))
 	})
 
 	It("returns an error if the App secret is a valid base64 string but has an incorrect size", func() {
