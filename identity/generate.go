@@ -1,7 +1,9 @@
 package identity
 
 import (
+	"encoding/base64"
 	"errors"
+	"golang.org/x/crypto/blake2b"
 
 	"github.com/TankerHQ/identity-go/b64json"
 )
@@ -44,6 +46,12 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 	if publicIdentity.Target != "user" && publicIdentity.Target != "email" {
 		return nil, errors.New("Unsupported identity target")
+	}
+
+	if publicIdentity.Target == "email" {
+		publicIdentity.Target = "hashed_email"
+		hashedEmail := blake2b.Sum256([]byte(publicIdentity.Value))
+		publicIdentity.Value = base64.StdEncoding.EncodeToString(hashedEmail[:])
 	}
 
 	return b64json.Encode(publicIdentity)

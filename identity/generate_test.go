@@ -5,6 +5,7 @@ import (
 	"github.com/TankerHQ/identity-go/b64json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"golang.org/x/crypto/blake2b"
 )
 
 var _ = Describe("generate", func() {
@@ -118,7 +119,9 @@ var _ = Describe("generate", func() {
 	})
 
 	It("creates a valid public identity from a provisional identity", func() {
-		identityB64, err := CreateProvisional(appConfig, "email@example.com")
+		email := "email@example.com"
+		hashedEmail := blake2b.Sum256([]byte(email))
+		identityB64, err := CreateProvisional(appConfig, email)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}
@@ -128,9 +131,13 @@ var _ = Describe("generate", func() {
 		publicID, err := GetPublicIdentity(*identityB64)
 		Expect(err).ShouldNot(HaveOccurred())
 
+		expectedId := provisionalID.publicProvisionalIdentity
+		expectedId.Target = "hashed_email"
+		expectedId.Value = base64.StdEncoding.EncodeToString(hashedEmail[:])
+
 		extractedPublicID := &publicProvisionalIdentity{}
 		_ = b64json.Decode(*publicID, extractedPublicID)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(*extractedPublicID).Should(Equal(provisionalID.publicProvisionalIdentity))
+		Expect(*extractedPublicID).Should(Equal(expectedId))
 	})
 })
