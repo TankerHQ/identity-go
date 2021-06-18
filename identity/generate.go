@@ -3,7 +3,7 @@ package identity
 import (
 	"errors"
 
-	"github.com/TankerHQ/identity-go/b64json"
+	"github.com/TankerHQ/identity-go/v2/b64json"
 )
 
 func Create(config Config, userID string) (*string, error) {
