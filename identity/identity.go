@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"errors"
 
-	"github.com/TankerHQ/identity-go/curve25519"
+	"github.com/TankerHQ/identity-go/v2/curve25519"
 	"golang.org/x/crypto/ed25519"
 )
 

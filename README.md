@@ -9,7 +9,7 @@ Identity generation in Go for the [Tanker SDK](https://docs.tanker.io/latest/).
 ## Installation
 
 ```bash
-go get github.com/TankerHQ/identity-go/identity
+go get github.com/TankerHQ/identity-go/v2/identity
 ```
 
 ## Usage
@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"errors"
 
-	"github.com/TankerHQ/identity-go/identity"
+	"github.com/TankerHQ/identity-go/v2/identity"
 )
 
 var config = identity.Config{
