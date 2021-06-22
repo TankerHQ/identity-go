@@ -16,9 +16,13 @@ var _ = Describe("generate", func() {
 
 		oldPublicProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJlbWFpbCIsInZhbHVlIjoiYnJlbmRhbi5laWNoQHRhbmtlci5pbyIsInB1YmxpY19lbmNyeXB0aW9uX2tleSI6Ii8yajRkSTNyOFBsdkNOM3VXNEhoQTV3QnRNS09jQUNkMzhLNk4wcSttRlU9IiwicHVibGljX3NpZ25hdHVyZV9rZXkiOiJXN1FFUUJ1OUZYY1hJcE9ncTYydFB3Qml5RkFicFQxckFydUQwaC9OclRBPSJ9"
 		newPublicProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJoYXNoZWRfZW1haWwiLCJ2YWx1ZSI6IjB1MmM4dzhFSVpXVDJGelJOL3l5TTVxSWJFR1lUTkRUNVNrV1ZCdTIwUW89IiwicHVibGljX2VuY3J5cHRpb25fa2V5IjoiLzJqNGRJM3I4UGx2Q04zdVc0SGhBNXdCdE1LT2NBQ2QzOEs2TjBxK21GVT0iLCJwdWJsaWNfc2lnbmF0dXJlX2tleSI6Ilc3UUVRQnU5RlhjWElwT2dxNjJ0UHdCaXlGQWJwVDFyQXJ1RDBoL05yVEE9In0="
+		phoneNumberProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJwaG9uZV9udW1iZXIiLCJ2YWx1ZSI6IiszMzYxMTIyMzM0NCIsInB1YmxpY19lbmNyeXB0aW9uX2tleSI6Im42bTlYNUxmMFpuYXo4ZjArc2NoTElCTm0rcGlQaG5zWXZBdlh3MktFQXc9IiwicHJpdmF0ZV9lbmNyeXB0aW9uX2tleSI6InRWVFM5bkh4cjJNZFZ1VFI1Y2x3dzBFWGJ3aXM4SGl4Z1BJTmJRSngxVTQ9IiwicHVibGljX3NpZ25hdHVyZV9rZXkiOiJqcklEaWdTQ25BaTNHbDltSUFTbEFpU2hLQzdkQkxGVVpQOUN4TEdzYkg4PSIsInByaXZhdGVfc2lnbmF0dXJlX2tleSI6IlFIcWNMcjhicjZNM2JQblFtUWczcStxSENycDA1RGJjQnBMUGFUWlkwYTZPc2dPS0JJS2NDTGNhWDJZZ0JLVUNKS0VvTHQwRXNWUmsvMExFc2F4c2Z3PT0ifQ=="
+		phoneNumberPublicProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJwaG9uZV9udW1iZXIiLCJ2YWx1ZSI6IkplYWlRQWg4eDdqY2lvVTJtNGloeStDc0hKbHlXKzRWVlNTczVTSEZVVHc9IiwicHVibGljX2VuY3J5cHRpb25fa2V5IjoibjZtOVg1TGYwWm5hejhmMCtzY2hMSUJObStwaVBobnNZdkF2WHcyS0VBdz0iLCJwdWJsaWNfc2lnbmF0dXJlX2tleSI6ImpySURpZ1NDbkFpM0dsOW1JQVNsQWlTaEtDN2RCTEZVWlA5Q3hMR3NiSDg9In0="
+
 
 		appID     = "tpoxyNzh0hU9G2i9agMvHyyd+pO6zGCjO9BfhrCLjd4="
 		appSecret = "cTMoGGUKhwN47ypq4xAXAtVkNWeyUtMltQnYwJhxWYSvqjPVGmXd2wwa7y17QtPTZhn8bxb015CZC/e4ZI7+MQ=="
+		userPhone = "+33611223344"
 
 		appConfig = Config{
 			AppID:     appID,
@@ -101,6 +105,11 @@ var _ = Describe("generate", func() {
 		Expect(err).Should(HaveOccurred())
 	})
 
+	It("fails to generate a provisional identity with an invalid target", func() {
+		_, err := CreateProvisional(appConfig, "INVALID!", "xxx")
+		Expect(err).Should(HaveOccurred())
+	})
+
 	It("generates a valid provisional identity in b64 form", func() {
 		identityB64, err := CreateProvisional(appConfig, "email", "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
@@ -114,6 +123,57 @@ var _ = Describe("generate", func() {
 		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
 		Expect(id.PrivateSignatureKey).ShouldNot(BeEmpty())
 		Expect(id.PublicSignatureKey).ShouldNot(BeEmpty())
+	})
+
+	It("generates a valid phone_number provisional identity in b64 form", func() {
+		identityB64, err := CreateProvisional(appConfig, "phone_number", userPhone)
+		Expect(err).ShouldNot(HaveOccurred())
+
+		id := &provisionalIdentity{}
+		err = b64json.Decode(*identityB64, id)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(id.Target).Should(Equal("phone_number"))
+		Expect(id.Value).Should(Equal(userPhone))
+		Expect(id.PrivateEncryptionKey).ShouldNot(BeEmpty())
+		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
+		Expect(id.PrivateSignatureKey).ShouldNot(BeEmpty())
+		Expect(id.PublicSignatureKey).ShouldNot(BeEmpty())
+	})
+
+	It("deserializes a valid phone_number provisional identity", func() {
+		id := &provisionalIdentity{}
+		err := b64json.Decode(phoneNumberProvisionalIdentity, id)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(id.Target).Should(Equal("phone_number"))
+		Expect(id.Value).Should(Equal(userPhone))
+		Expect(base64.StdEncoding.EncodeToString(id.PrivateEncryptionKey)).
+			Should(Equal("tVTS9nHxr2MdVuTR5clww0EXbwis8HixgPINbQJx1U4="))
+		Expect(base64.StdEncoding.EncodeToString(id.PublicEncryptionKey)).
+			Should(Equal("n6m9X5Lf0Znaz8f0+schLIBNm+piPhnsYvAvXw2KEAw="))
+		Expect(base64.StdEncoding.EncodeToString(id.PrivateSignatureKey)).
+			Should(Equal("QHqcLr8br6M3bPnQmQg3q+qHCrp05DbcBpLPaTZY0a6OsgOKBIKcCLcaX2YgBKUCJKEoLt0EsVRk/0LEsaxsfw=="))
+		Expect(base64.StdEncoding.EncodeToString(id.PublicSignatureKey)).
+			Should(Equal("jrIDigSCnAi3Gl9mIASlAiShKC7dBLFUZP9CxLGsbH8="))
+	})
+
+	It("deserializes a valid phone_number public provisional identity", func() {
+		privId := &provisionalIdentity{}
+		err := b64json.Decode(phoneNumberProvisionalIdentity, privId)
+		Expect(err).ShouldNot(HaveOccurred())
+		hashedPhone := hashProvisionalIdentityValue(userPhone, base64.StdEncoding.EncodeToString(privId.PrivateSignatureKey))
+
+		publicIdentity, _ := GetPublicIdentity(phoneNumberProvisionalIdentity)
+		Expect(*publicIdentity).Should(Equal(phoneNumberPublicProvisionalIdentity))
+
+		id := &publicProvisionalIdentity{}
+		err2 := b64json.Decode(*publicIdentity, id)
+		Expect(err2).ShouldNot(HaveOccurred())
+		Expect(id.Target).Should(Equal("phone_number"))
+		Expect(id.Value).Should(Equal(hashedPhone))
+		Expect(base64.StdEncoding.EncodeToString(id.PublicEncryptionKey)).
+			Should(Equal("n6m9X5Lf0Znaz8f0+schLIBNm+piPhnsYvAvXw2KEAw="))
+		Expect(base64.StdEncoding.EncodeToString(id.PublicSignatureKey)).
+			Should(Equal("jrIDigSCnAi3Gl9mIASlAiShKC7dBLFUZP9CxLGsbH8="))
 	})
 
 	It("creates a valid public identity from an identity", func() {
