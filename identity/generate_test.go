@@ -52,7 +52,7 @@ var _ = Describe("generate", func() {
 	It("can upgrade an identity", func() {
 		identity, _ := Create(appConfig, "userID")
 		publicIdentity, _ := GetPublicIdentity(*identity)
-		provIdentity, _ := CreateProvisional(appConfig, "userID@tanker.io")
+		provIdentity, _ := CreateProvisional(appConfig, "email", "userID@tanker.io")
 		publicProvIdentity, _ := GetPublicIdentity(*provIdentity)
 
 		identityJson, _ := base64.StdEncoding.DecodeString(*identity)
@@ -103,7 +103,7 @@ var _ = Describe("generate", func() {
 	})
 
 	It("generates a valid provisional identity in b64 form", func() {
-		identityB64, err := CreateProvisional(appConfig, "email@example.com")
+		identityB64, err := CreateProvisional(appConfig, "email", "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
@@ -132,7 +132,7 @@ var _ = Describe("generate", func() {
 	It("creates a valid public identity from a provisional identity", func() {
 		email := "email@example.com"
 		hashedEmail := blake2b.Sum256([]byte(email))
-		identityB64, err := CreateProvisional(appConfig, email)
+		identityB64, err := CreateProvisional(appConfig, "email", email)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}

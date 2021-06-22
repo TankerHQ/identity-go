@@ -21,12 +21,17 @@ func Create(config Config, userID string) (*string, error) {
 	return b64json.Encode(identity)
 }
 
-func CreateProvisional(config Config, email string) (*string, error) {
+func CreateProvisional(config Config, target string, value string) (*string, error) {
 	conf, err := config.fromB64()
 	if err != nil {
 		return nil, err
 	}
-	identity, err := generateProvisionalIdentity(*conf, email)
+
+	if target != "email" && target != "phone_number" {
+		return nil, errors.New("unsupported provisional identity target")
+	}
+
+	identity, err := generateProvisionalIdentity(*conf, target, value)
 	if err != nil {
 		return nil, err
 	}
@@ -45,14 +50,28 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		return nil, err
 	}
 
-	if publicIdentity.Target != "user" && publicIdentity.Target != "email" {
+	if publicIdentity.Target != "user" &&
+		publicIdentity.Target != "email" &&
+		publicIdentity.Target != "phone_number" {
 		return nil, errors.New("Unsupported identity target")
 	}
 
-	if publicIdentity.Target == "email" {
-		publicIdentity.Target = "hashed_email"
-		hashedEmail := blake2b.Sum256([]byte(publicIdentity.Value))
-		publicIdentity.Value = base64.StdEncoding.EncodeToString(hashedEmail[:])
+	if publicIdentity.Target != "user" {
+		if publicIdentity.Target == "email" {
+			publicIdentity.Target = "hashed_email"
+			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
+		} else {
+			privateIdentity := orderedmap.New()
+			err := b64json.Decode(b64Identity, &privateIdentity)
+			if err != nil {
+				return nil, err
+			}
+			privateSignatureKey, found := privateIdentity.Get("private_signature_key")
+			if !found {
+				return nil, errors.New("invalid tanker identity")
+			}
+			publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, privateSignatureKey.(string))
+		}
 	}
 
 	return b64json.Encode(publicIdentity)

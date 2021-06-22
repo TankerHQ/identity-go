@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"golang.org/x/crypto/blake2b"
 
 	"github.com/TankerHQ/identity-go/v2/curve25519"
 	"golang.org/x/crypto/ed25519"
@@ -69,7 +70,7 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 	return &identity, nil
 }
 
-func generateProvisionalIdentity(config config, email string) (*provisionalIdentity, error) {
+func generateProvisionalIdentity(config config, target string, value string) (*provisionalIdentity, error) {
 	publicSignatureKey, privateSignatureKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, err
@@ -83,8 +84,8 @@ func generateProvisionalIdentity(config config, email string) (*provisionalIdent
 		publicProvisionalIdentity: publicProvisionalIdentity{
 			publicIdentity: publicIdentity{
 				TrustchainID: config.AppID,
-				Target:       "email",
-				Value:        email,
+				Target:       target,
+				Value:        value,
 			},
 			PublicEncryptionKey: publicEncryptionKey,
 			PublicSignatureKey:  publicSignatureKey,
@@ -94,4 +95,16 @@ func generateProvisionalIdentity(config config, email string) (*provisionalIdent
 	}
 
 	return &provisionalIdentity, nil
+}
+
+func hashProvisionalIdentityEmail(email string) (hash string) {
+	hashedValue := blake2b.Sum256([]byte(email))
+	return base64.StdEncoding.EncodeToString(hashedValue[:])
+}
+
+func hashProvisionalIdentityValue(value string, privateSignatureKeyB64 string) (hash string) {
+	privateSignatureKey, _ := base64.StdEncoding.DecodeString(privateSignatureKeyB64)
+	hashSalt := blake2b.Sum256(privateSignatureKey)
+	hashedValue := blake2b.Sum256(append(hashSalt[:], []byte(value)...))
+	return base64.StdEncoding.EncodeToString(hashedValue[:])
 }

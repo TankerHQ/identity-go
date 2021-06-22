@@ -57,7 +57,7 @@ var _ = Describe("generateIdentity", func() {
 	})
 
 	It("generateProvisionalIdentity returns a valid tanker provisional identity", func() {
-		provisionalIdentity, err := generateProvisionalIdentity(conf, "email@example.com")
+		provisionalIdentity, err := generateProvisionalIdentity(conf, "email", "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Expect(provisionalIdentity.TrustchainID).To(Equal(AppID))
