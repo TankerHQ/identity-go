@@ -58,7 +58,6 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 	if publicIdentity.Target != "user" {
 		if publicIdentity.Target == "email" {
-			publicIdentity.Target = "hashed_email"
 			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
 		} else {
 			privateIdentity := orderedmap.New()
@@ -72,6 +71,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 			}
 			publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, privateSignatureKey.(string))
 		}
+		publicIdentity.Target = "hashed_" + publicIdentity.Target
 	}
 
 	return b64json.Encode(publicIdentity)
