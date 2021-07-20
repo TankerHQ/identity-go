@@ -19,26 +19,24 @@ type config struct {
 func (cfg Config) fromBase64() (config, error) {
 	var (
 		newCfg config
+		err error
 	)
 
-	appIDBytes, err := base64.StdEncoding.DecodeString(cfg.AppID)
+	newCfg.AppID, err = base64.StdEncoding.DecodeString(cfg.AppID)
 	if err != nil {
 		return config{}, errors.New("Wrong AppID format, should be base64: " + cfg.AppID)
 	}
-	if len(appIDBytes) != AppPublicKeySize {
-		return config{}, fmt.Errorf("Expected App ID of size %d, got %d", AppPublicKeySize, len(appIDBytes))
+	if len(newCfg.AppID) != AppPublicKeySize {
+		return config{}, fmt.Errorf("Expected App ID of size %d, got %d", AppPublicKeySize, len(newCfg.AppID))
 	}
-	appSecretBytes, err := base64.StdEncoding.DecodeString(cfg.AppSecret)
+
+	newCfg.AppSecret, err = base64.StdEncoding.DecodeString(cfg.AppSecret)
 	if err != nil {
 		return config{}, errors.New("Wrong AppSecret format, should be base64: " + cfg.AppSecret)
 	}
-	if len(appSecretBytes) != AppSecretSize {
-		return config{}, fmt.Errorf("Expected App secret of size %d, got %d", AppSecretSize, len(appSecretBytes))
+	if len(newCfg.AppSecret) != AppSecretSize {
+		return config{}, fmt.Errorf("Expected App secret of size %d, got %d", AppSecretSize, len(newCfg.AppSecret))
 	}
 
-	newCfg = config{
-		AppID:     appIDBytes,
-		AppSecret: appSecretBytes,
-	}
 	return newCfg, nil
 }
