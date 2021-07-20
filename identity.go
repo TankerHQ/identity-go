@@ -37,7 +37,7 @@ func newIdentity(config config, userIDString string) (identity, error) {
 	generatedAppID := newAppId(config.AppSecret)
 
 	if !bytes.Equal(generatedAppID, config.AppID) {
-		return identity{}, errors.New("App secret and app ID mismatch")
+		return identity{}, errors.New("app secret and app ID mismatch")
 	}
 
 	userID := hashUserID(config.AppID, userIDString)
@@ -147,7 +147,7 @@ func GetPublic(b64Identity string) (string, error) {
 	}
 
 	if pid.Target != "user" && pid.Target != "email" {
-		return "", errors.New("Unsupported identity target")
+		return "", errors.New("unsupported identity target")
 	}
 
 	return Base64JsonEncode(pid)
