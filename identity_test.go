@@ -22,7 +22,7 @@ func checkDelegationSignature(identity identity, trustchainPublicKey []byte) {
 	)).To(Equal(true))
 }
 
-var _ = Describe("generateIdentity", func() {
+var _ = Describe("newIdentity", func() {
 	var (
 		trustchainPublicKey []byte
 		AppSecret           []byte
@@ -47,8 +47,8 @@ var _ = Describe("generateIdentity", func() {
 		}
 	})
 
-	It("generateIdentity returns a valid tanker identity", func() {
-		identity, err := generateIdentity(conf, userID)
+	It("newIdentity returns a valid tanker identity", func() {
+		identity, err := newIdentity(conf, userID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(identity.TrustchainID).To(Equal(AppID))
 		Expect(identity.Target).To(Equal("user"))
@@ -56,8 +56,8 @@ var _ = Describe("generateIdentity", func() {
 		checkDelegationSignature(*identity, trustchainPublicKey)
 	})
 
-	It("generateProvisionalIdentity returns a valid tanker provisional identity", func() {
-		provisionalIdentity, err := generateProvisionalIdentity(conf, "email@example.com")
+	It("newProvisionalIdentity returns a valid tanker provisional identity", func() {
+		provisionalIdentity, err := newProvisionalIdentity(conf, "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Expect(provisionalIdentity.TrustchainID).To(Equal(AppID))
@@ -69,7 +69,7 @@ var _ = Describe("generateIdentity", func() {
 		mismatchingAppIDStr := "rB0/yEJWCUVYRtDZLtXaJqtneXQOsCSKrtmWw+V+ysc="
 		mismatchingAppID, _ := base64.StdEncoding.DecodeString(mismatchingAppIDStr)
 		invalidConf := config{AppID: mismatchingAppID, AppSecret: conf.AppSecret}
-		_, err := generateIdentity(invalidConf, "email@example.com")
+		_, err := newIdentity(invalidConf, "email@example.com")
 		Expect(err).Should(HaveOccurred())
 	})
 })

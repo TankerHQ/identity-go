@@ -33,15 +33,15 @@ type provisionalIdentity struct {
 	PrivateEncryptionKey []byte `json:"private_encryption_key"`
 }
 
-func generateIdentity(config config, userIDString string) (*identity, error) {
-	generatedAppID := generateAppID(config.AppSecret)
+func newIdentity(config config, userIDString string) (*identity, error) {
+	generatedAppID := newAppId(config.AppSecret)
 
 	if !bytes.Equal(generatedAppID, config.AppID) {
 		return nil, errors.New("App secret and app ID mismatch")
 	}
 
 	userID := hashUserID(config.AppID, userIDString)
-	userSecret := createUserSecret(userID)
+	userSecret := newUserSecret(userID)
 
 	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
@@ -67,12 +67,12 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 	return &identity, nil
 }
 
-func generateProvisionalIdentity(config config, email string) (*provisionalIdentity, error) {
+func newProvisionalIdentity(config config, email string) (*provisionalIdentity, error) {
 	publicSignatureKey, privateSignatureKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, err
 	}
-	publicEncryptionKey, privateEncryptionKey, err := GenerateKey()
+	publicEncryptionKey, privateEncryptionKey, err := NewKeyPair()
 	if err != nil {
 		return nil, err
 	}

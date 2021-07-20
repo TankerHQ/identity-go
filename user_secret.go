@@ -16,7 +16,7 @@ func hashUserID(trustchainID []byte, userIDString string) []byte {
 	return hashedUserID[:]
 }
 
-func createUserSecret(userID []byte) []byte {
+func newUserSecret(userID []byte) []byte {
 	randdata := make([]byte, userSecretSize-1)
 	_, _ = rand.Read(randdata)
 	check := oneByteGenericHash(append(randdata, userID...))

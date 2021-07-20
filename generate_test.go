@@ -26,7 +26,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &identity{}
-		err = Decode(*identityB64, id)
+		err = Base64JsonDecode(*identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("user"))
 	})
@@ -50,7 +50,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
-		err = Decode(*identityB64, id)
+		err = Base64JsonDecode(*identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("email"))
 		Expect(id.Value).Should(Equal("email@example.com"))
@@ -65,10 +65,10 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicIdentity{}
-		_ = Decode(*publicID, extractedPublicID)
+		_ = Base64JsonDecode(*publicID, extractedPublicID)
 
 		extractedGoodPublicID := &publicIdentity{}
-		_ = Decode(goodPublicIdentity, extractedGoodPublicID)
+		_ = Base64JsonDecode(goodPublicIdentity, extractedGoodPublicID)
 		Expect(*extractedGoodPublicID).Should(Equal(*extractedPublicID))
 	})
 
@@ -77,14 +77,14 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}
-		_ = Decode(*identityB64, provisionalID)
+		_ = Base64JsonDecode(*identityB64, provisionalID)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		publicID, err := GetPublicIdentity(*identityB64)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicProvisionalIdentity{}
-		_ = Decode(*publicID, extractedPublicID)
+		_ = Base64JsonDecode(*publicID, extractedPublicID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(*extractedPublicID).Should(Equal(provisionalID.publicProvisionalIdentity))
 	})

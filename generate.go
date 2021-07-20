@@ -5,27 +5,27 @@ import (
 )
 
 func Create(config Config, userID string) (*string, error) {
-	conf, err := config.fromB64()
+	conf, err := config.fromBase64()
 	if err != nil {
 		return nil, err
 	}
-	identity, err := generateIdentity(*conf, userID)
+	identity, err := newIdentity(*conf, userID)
 	if err != nil {
 		return nil, err
 	}
-	return Encode(identity)
+	return Base64JsonEncode(identity)
 }
 
 func CreateProvisional(config Config, email string) (*string, error) {
-	conf, err := config.fromB64()
+	conf, err := config.fromBase64()
 	if err != nil {
 		return nil, err
 	}
-	identity, err := generateProvisionalIdentity(*conf, email)
+	identity, err := newProvisionalIdentity(*conf, email)
 	if err != nil {
 		return nil, err
 	}
-	return Encode(identity)
+	return Base64JsonEncode(identity)
 }
 
 func GetPublicIdentity(b64Identity string) (*string, error) {
@@ -35,7 +35,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
 	publicIdentity := &anyPublicIdentity{}
-	err := Decode(b64Identity, publicIdentity)
+	err := Base64JsonDecode(b64Identity, publicIdentity)
 	if err != nil {
 		return nil, err
 	}
@@ -44,5 +44,5 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		return nil, errors.New("Unsupported identity target")
 	}
 
-	return Encode(publicIdentity)
+	return Base64JsonEncode(publicIdentity)
 }

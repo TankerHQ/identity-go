@@ -16,7 +16,7 @@ type config struct {
 	AppSecret []byte
 }
 
-func (this Config) fromB64() (*config, error) {
+func (this Config) fromBase64() (*config, error) {
 	appIDBytes, err := base64.StdEncoding.DecodeString(this.AppID)
 	if err != nil {
 		return nil, errors.New("Wrong AppID format, should be base64: " + this.AppID)
