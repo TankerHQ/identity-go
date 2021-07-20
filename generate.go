@@ -34,15 +34,19 @@ func GetPublicIdentity(b64Identity string) (string, error) {
 		PublicSignatureKey  []byte `json:"public_signature_key,omitempty"`
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
-	publicIdentity := &anyPublicIdentity{}
-	err := Base64JsonDecode(b64Identity, publicIdentity)
+
+	var (
+		pid anyPublicIdentity
+	)
+
+	err := Base64JsonDecode(b64Identity, &pid)
 	if err != nil {
 		return "", err
 	}
 
-	if publicIdentity.Target != "user" && publicIdentity.Target != "email" {
+	if pid.Target != "user" && pid.Target != "email" {
 		return "", errors.New("Unsupported identity target")
 	}
 
-	return Base64JsonEncode(publicIdentity)
+	return Base64JsonEncode(pid)
 }
