@@ -2,8 +2,6 @@ package identity
 
 import (
 	"encoding/base64"
-
-	"github.com/TankerHQ/identity-go/v2/b64json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -28,7 +26,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &identity{}
-		err = b64json.Decode(*identityB64, id)
+		err = Decode(*identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("user"))
 	})
@@ -52,7 +50,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
-		err = b64json.Decode(*identityB64, id)
+		err = Decode(*identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("email"))
 		Expect(id.Value).Should(Equal("email@example.com"))
@@ -67,10 +65,10 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicIdentity{}
-		_ = b64json.Decode(*publicID, extractedPublicID)
+		_ = Decode(*publicID, extractedPublicID)
 
 		extractedGoodPublicID := &publicIdentity{}
-		_ = b64json.Decode(goodPublicIdentity, extractedGoodPublicID)
+		_ = Decode(goodPublicIdentity, extractedGoodPublicID)
 		Expect(*extractedGoodPublicID).Should(Equal(*extractedPublicID))
 	})
 
@@ -79,14 +77,14 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}
-		_ = b64json.Decode(*identityB64, provisionalID)
+		_ = Decode(*identityB64, provisionalID)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		publicID, err := GetPublicIdentity(*identityB64)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicProvisionalIdentity{}
-		_ = b64json.Decode(*publicID, extractedPublicID)
+		_ = Decode(*publicID, extractedPublicID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(*extractedPublicID).Should(Equal(provisionalID.publicProvisionalIdentity))
 	})

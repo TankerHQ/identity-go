@@ -2,8 +2,6 @@ package identity
 
 import (
 	"errors"
-
-	"github.com/TankerHQ/identity-go/v2/b64json"
 )
 
 func Create(config Config, userID string) (*string, error) {
@@ -15,7 +13,7 @@ func Create(config Config, userID string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b64json.Encode(identity)
+	return Encode(identity)
 }
 
 func CreateProvisional(config Config, email string) (*string, error) {
@@ -27,7 +25,7 @@ func CreateProvisional(config Config, email string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b64json.Encode(identity)
+	return Encode(identity)
 }
 
 func GetPublicIdentity(b64Identity string) (*string, error) {
@@ -37,7 +35,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
 	publicIdentity := &anyPublicIdentity{}
-	err := b64json.Decode(b64Identity, publicIdentity)
+	err := Decode(b64Identity, publicIdentity)
 	if err != nil {
 		return nil, err
 	}
@@ -46,5 +44,5 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		return nil, errors.New("Unsupported identity target")
 	}
 
-	return b64json.Encode(publicIdentity)
+	return Encode(publicIdentity)
 }
