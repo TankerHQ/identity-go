@@ -53,7 +53,7 @@ var _ = Describe("newIdentity", func() {
 		Expect(identity.TrustchainID).To(Equal(AppID))
 		Expect(identity.Target).To(Equal("user"))
 		Expect(identity.Value).To(Equal(base64.StdEncoding.EncodeToString(obfuscatedUserID)))
-		checkDelegationSignature(*identity, trustchainPublicKey)
+		checkDelegationSignature(identity, trustchainPublicKey)
 	})
 
 	It("newProvisionalIdentity returns a valid tanker provisional identity", func() {
