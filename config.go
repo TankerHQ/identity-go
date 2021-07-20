@@ -16,21 +16,21 @@ type config struct {
 	AppSecret []byte
 }
 
-func (this Config) fromBase64() (config, error) {
+func (cfg Config) fromBase64() (config, error) {
 	var (
 		newCfg config
 	)
 
-	appIDBytes, err := base64.StdEncoding.DecodeString(this.AppID)
+	appIDBytes, err := base64.StdEncoding.DecodeString(cfg.AppID)
 	if err != nil {
-		return config{}, errors.New("Wrong AppID format, should be base64: " + this.AppID)
+		return config{}, errors.New("Wrong AppID format, should be base64: " + cfg.AppID)
 	}
 	if len(appIDBytes) != AppPublicKeySize {
 		return config{}, fmt.Errorf("Expected App ID of size %d, got %d", AppPublicKeySize, len(appIDBytes))
 	}
-	appSecretBytes, err := base64.StdEncoding.DecodeString(this.AppSecret)
+	appSecretBytes, err := base64.StdEncoding.DecodeString(cfg.AppSecret)
 	if err != nil {
-		return config{}, errors.New("Wrong AppSecret format, should be base64: " + this.AppSecret)
+		return config{}, errors.New("Wrong AppSecret format, should be base64: " + cfg.AppSecret)
 	}
 	if len(appSecretBytes) != AppSecretSize {
 		return config{}, fmt.Errorf("Expected App secret of size %d, got %d", AppSecretSize, len(appSecretBytes))
