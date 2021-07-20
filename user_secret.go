@@ -6,7 +6,9 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-const userSecretSize = 32
+const (
+	userSecretSize = 32
+)
 
 func hashUserID(trustchainID []byte, userIDString string) []byte {
 	userIDBuffer := append([]byte(userIDString), trustchainID...)
