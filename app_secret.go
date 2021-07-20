@@ -14,7 +14,7 @@ const (
 	authorSize        = 32
 )
 
-func generateAppID(appSecret []byte) []byte {
+func newAppId(appSecret []byte) []byte {
 	publicKey := appSecret[AppSecretSize-AppPublicKeySize : AppSecretSize]
 	author := make([]byte, 32)
 	payload := append([]byte{appCreationNature}, author...)

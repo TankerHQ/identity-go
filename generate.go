@@ -9,19 +9,19 @@ import (
 )
 
 func Create(config Config, userID string) (*string, error) {
-	conf, err := config.fromB64()
+	conf, err := config.fromBase64()
 	if err != nil {
 		return nil, err
 	}
-	identity, err := generateIdentity(*conf, userID)
+	identity, err := newIdentity(*conf, userID)
 	if err != nil {
 		return nil, err
 	}
-	return Encode(identity)
+	return Base64JsonEncode(identity)
 }
 
 func CreateProvisional(config Config, target string, value string) (*string, error) {
-	conf, err := config.fromB64()
+	conf, err := config.fromBase64()
 	if err != nil {
 		return nil, err
 	}
@@ -29,12 +29,11 @@ func CreateProvisional(config Config, target string, value string) (*string, err
 	if target != "email" && target != "phone_number" {
 		return nil, errors.New("unsupported provisional identity target")
 	}
-
-	identity, err := generateProvisionalIdentity(*conf, target, value)
+	identity, err := newProvisionalIdentity(*conf, target, value)
 	if err != nil {
 		return nil, err
 	}
-	return Encode(identity)
+	return Base64JsonEncode(identity)
 }
 
 func GetPublicIdentity(b64Identity string) (*string, error) {
@@ -44,7 +43,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
 	publicIdentity := &anyPublicIdentity{}
-	err := Decode(b64Identity, publicIdentity)
+	err := Base64JsonDecode(b64Identity, publicIdentity)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +59,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
 		} else {
 			privateIdentity := orderedmap.New()
-			err := Decode(b64Identity, &privateIdentity)
+			err := Base64JsonDecode(b64Identity, &privateIdentity)
 			if err != nil {
 				return nil, err
 			}
@@ -73,12 +72,12 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		publicIdentity.Target = "hashed_" + publicIdentity.Target
 	}
 
-	return Encode(publicIdentity)
+	return Base64JsonEncode(publicIdentity)
 }
 
 func UpgradeIdentity(b64Identity string) (*string, error) {
 	identity := orderedmap.New()
-	err := Decode(b64Identity, &identity)
+	err := Base64JsonDecode(b64Identity, &identity)
 	if err != nil {
 		return nil, err
 	}
@@ -99,5 +98,5 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 		identity.Set("value", base64.StdEncoding.EncodeToString(hashedEmail[:]))
 	}
 
-	return Encode(identity)
+	return Base64JsonEncode(identity)
 }
