@@ -5,8 +5,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"golang.org/x/crypto/blake2b"
-
-	"github.com/TankerHQ/identity-go/v3/curve25519"
 	"golang.org/x/crypto/ed25519"
 )
 
@@ -75,7 +73,7 @@ func generateProvisionalIdentity(config config, target string, value string) (*p
 	if err != nil {
 		return nil, err
 	}
-	publicEncryptionKey, privateEncryptionKey, err := curve25519.GenerateKey()
+	publicEncryptionKey, privateEncryptionKey, err := GenerateKey()
 	if err != nil {
 		return nil, err
 	}

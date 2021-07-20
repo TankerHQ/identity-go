@@ -1,4 +1,4 @@
-package b64json
+package identity
 
 import (
 	"encoding/base64"

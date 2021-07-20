@@ -1,4 +1,4 @@
-package curve25519_test
+package identity_test
 
 import (
 	"testing"

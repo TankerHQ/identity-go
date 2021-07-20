@@ -6,7 +6,6 @@ import (
 	"github.com/iancoleman/orderedmap"
 	"golang.org/x/crypto/blake2b"
 
-	"github.com/TankerHQ/identity-go/v3/b64json"
 )
 
 func Create(config Config, userID string) (*string, error) {
@@ -18,7 +17,7 @@ func Create(config Config, userID string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return b64json.Encode(identity)
+	return Encode(identity)
 }
 
 func CreateProvisional(config Config, target string, value string) (*string, error) {
@@ -35,7 +34,7 @@ func CreateProvisional(config Config, target string, value string) (*string, err
 	if err != nil {
 		return nil, err
 	}
-	return b64json.Encode(identity)
+	return Encode(identity)
 }
 
 func GetPublicIdentity(b64Identity string) (*string, error) {
@@ -45,7 +44,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
 	publicIdentity := &anyPublicIdentity{}
-	err := b64json.Decode(b64Identity, publicIdentity)
+	err := Decode(b64Identity, publicIdentity)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +60,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
 		} else {
 			privateIdentity := orderedmap.New()
-			err := b64json.Decode(b64Identity, &privateIdentity)
+			err := Decode(b64Identity, &privateIdentity)
 			if err != nil {
 				return nil, err
 			}
@@ -74,12 +73,12 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		publicIdentity.Target = "hashed_" + publicIdentity.Target
 	}
 
-	return b64json.Encode(publicIdentity)
+	return Encode(publicIdentity)
 }
 
 func UpgradeIdentity(b64Identity string) (*string, error) {
 	identity := orderedmap.New()
-	err := b64json.Decode(b64Identity, &identity)
+	err := Decode(b64Identity, &identity)
 	if err != nil {
 		return nil, err
 	}
@@ -100,5 +99,5 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 		identity.Set("value", base64.StdEncoding.EncodeToString(hashedEmail[:]))
 	}
 
-	return b64json.Encode(identity)
+	return Encode(identity)
 }
