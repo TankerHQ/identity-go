@@ -110,14 +110,16 @@ func hashProvisionalIdentityValue(value string, privateSignatureKeyB64 string) (
 	return base64.StdEncoding.EncodeToString(hashedValue[:])
 }
 
+// Create creates a new identity usable for interaction with the Tanker server
 func Create(config Config, userID string) (string, error) {
 	return New(config, userID)
 }
 
+// CreateProvisional creates a new provisional identity usable for interaction with the Tanker server
 func CreateProvisional(config Config, target Target, value string) (string, error) {
 	return NewProvisional(config, target, value)
 }
-
+// GetPublicIdentity returns the public identity derived from the given identity
 func GetPublicIdentity(b64Identity string) (string, error) {
 	return GetPublic(b64Identity)
 }
