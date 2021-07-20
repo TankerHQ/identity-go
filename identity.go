@@ -33,14 +33,14 @@ type provisionalIdentity struct {
 	PrivateEncryptionKey []byte `json:"private_encryption_key"`
 }
 
-func newIdentity(config config, userIDString string) (identity, error) {
-	generatedAppID := newAppId(config.AppSecret)
+func newIdentity(cfg config, userIDString string) (identity, error) {
+	generatedAppID := newAppId(cfg.AppSecret)
 
-	if !bytes.Equal(generatedAppID, config.AppID) {
+	if !bytes.Equal(generatedAppID, cfg.AppID) {
 		return identity{}, errors.New("app secret and app ID mismatch")
 	}
 
-	userID := hashUserID(config.AppID, userIDString)
+	userID := hashUserID(cfg.AppID, userIDString)
 	userSecret := newUserSecret(userID)
 
 	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
@@ -50,11 +50,11 @@ func newIdentity(config config, userIDString string) (identity, error) {
 
 	payload := append(epubSignKey, userID...)
 
-	delegationSignature := ed25519.Sign(config.AppSecret, payload)
+	delegationSignature := ed25519.Sign(cfg.AppSecret, payload)
 
-	identity := identity{
+	id := identity{
 		publicIdentity: publicIdentity{
-			TrustchainID: config.AppID,
+			TrustchainID: cfg.AppID,
 			Target:       "user",
 			Value:        base64.StdEncoding.EncodeToString(userID),
 		},
@@ -64,10 +64,10 @@ func newIdentity(config config, userIDString string) (identity, error) {
 		UserSecret:                   userSecret,
 	}
 
-	return identity, nil
+	return id, nil
 }
 
-func newProvisionalIdentity(config config, email string) (provisionalIdentity, error) {
+func newProvisionalIdentity(cfg config, email string) (provisionalIdentity, error) {
 	publicSignatureKey, privateSignatureKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return provisionalIdentity{}, err
@@ -77,10 +77,10 @@ func newProvisionalIdentity(config config, email string) (provisionalIdentity, e
 		return provisionalIdentity{}, err
 	}
 
-	provisionalIdentity := provisionalIdentity{
+	pid := provisionalIdentity{
 		publicProvisionalIdentity: publicProvisionalIdentity{
 			publicIdentity: publicIdentity{
-				TrustchainID: config.AppID,
+				TrustchainID: cfg.AppID,
 				Target:       "email",
 				Value:        email,
 			},
@@ -91,7 +91,7 @@ func newProvisionalIdentity(config config, email string) (provisionalIdentity, e
 		PrivateEncryptionKey: privateEncryptionKey,
 	}
 
-	return provisionalIdentity, nil
+	return pid, nil
 }
 
 func Create(config Config, userID string) (string, error) {
