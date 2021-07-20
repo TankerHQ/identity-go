@@ -1,5 +1,6 @@
 package identity
 
+// Target represents the possible targets for an identity
 type Target string
 
 const (

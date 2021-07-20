@@ -96,14 +96,17 @@ func newProvisionalIdentity(cfg config, email string) (provisionalIdentity, erro
 	return pid, nil
 }
 
+// Create creates a new identity usable for interaction with the Tanker server
 func Create(config Config, userID string) (string, error) {
 	return New(config, userID)
 }
 
+// CreateProvisional creates a new provisional identity usable for interaction with the Tanker server
 func CreateProvisional(config Config, email string) (string, error) {
 	return NewProvisional(config, email)
 }
 
+// GetPublicIdentity returns the public identity attached to the given identity
 func GetPublicIdentity(b64Identity string) (string, error) {
 	return GetPublic(b64Identity)
 }

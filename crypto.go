@@ -6,6 +6,7 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
+// NewKeyPair returns a pair of signature keys, or an error if it occurs
 func NewKeyPair() ([]byte, []byte, error) {
 	var (
 		sk [32]byte

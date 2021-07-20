@@ -5,6 +5,7 @@ import (
 	"fmt"
 )
 
+// Config wraps data needed for identity creation
 type Config struct {
 	AppID     string
 	AppSecret string
