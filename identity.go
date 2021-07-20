@@ -9,7 +9,7 @@ import (
 
 type publicIdentity struct {
 	TrustchainID []byte `json:"trustchain_id"`
-	Target       string `json:"target"`
+	Target       Target `json:"target"`
 	Value        string `json:"value"`
 }
 
@@ -55,7 +55,7 @@ func newIdentity(cfg config, userIDString string) (identity, error) {
 	id := identity{
 		publicIdentity: publicIdentity{
 			TrustchainID: cfg.AppID,
-			Target:       "user",
+			Target:       TargetUser,
 			Value:        base64.StdEncoding.EncodeToString(userID),
 		},
 		DelegationSignature:          delegationSignature,
@@ -81,7 +81,7 @@ func newProvisionalIdentity(cfg config, email string) (provisionalIdentity, erro
 		publicProvisionalIdentity: publicProvisionalIdentity{
 			publicIdentity: publicIdentity{
 				TrustchainID: cfg.AppID,
-				Target:       "email",
+				Target:       TargetEmail,
 				Value:        email,
 			},
 			PublicEncryptionKey: publicEncryptionKey,
@@ -146,7 +146,7 @@ func GetPublic(b64Identity string) (string, error) {
 		return "", err
 	}
 
-	if pid.Target != "user" && pid.Target != "email" {
+	if pid.Target != TargetUser && pid.Target != TargetEmail {
 		return "", errors.New("unsupported identity target")
 	}
 

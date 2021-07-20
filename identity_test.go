@@ -51,7 +51,7 @@ var _ = Describe("newIdentity", func() {
 		identity, err := newIdentity(conf, userID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(identity.TrustchainID).To(Equal(AppID))
-		Expect(identity.Target).To(Equal("user"))
+		Expect(identity.Target).To(Equal(TargetUser))
 		Expect(identity.Value).To(Equal(base64.StdEncoding.EncodeToString(obfuscatedUserID)))
 		checkDelegationSignature(identity, trustchainPublicKey)
 	})
@@ -61,7 +61,7 @@ var _ = Describe("newIdentity", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Expect(provisionalIdentity.TrustchainID).To(Equal(AppID))
-		Expect(provisionalIdentity.Target).To(Equal("email"))
+		Expect(provisionalIdentity.Target).To(Equal(TargetEmail))
 		Expect(provisionalIdentity.Value).To(Equal("email@example.com"))
 	})
 
@@ -96,7 +96,7 @@ var _ = Describe("generate", func() {
 		id := &identity{}
 		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("user"))
+		Expect(id.Target).Should(Equal(TargetUser))
 	})
 
 	It("returns an error if the App secret is a valid base64 string but has an incorrect size", func() {
@@ -120,7 +120,7 @@ var _ = Describe("generate", func() {
 		id := &provisionalIdentity{}
 		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("email"))
+		Expect(id.Target).Should(Equal(TargetEmail))
 		Expect(id.Value).Should(Equal("email@example.com"))
 		Expect(id.PrivateEncryptionKey).ShouldNot(BeEmpty())
 		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
