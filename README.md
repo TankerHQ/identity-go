@@ -32,7 +32,7 @@ var config = identity.Config{
 // Example server-side function in which you would implement checkAuth(),
 // retrieveIdentity() and storeIdentity() to use your own authentication
 // and data storage mechanisms:
-func getIdentity(userID string) (*string, error) {
+func getIdentity(userID string) (string, error) {
 	// Always ensure userID is authenticated before returning a identity
 	if !isAuthenticated(userID) {
 		return nil, errors.New("Unauthorized")
@@ -52,11 +52,11 @@ func getIdentity(userID string) (*string, error) {
 		storeIdentity(userID, identity)
 	}
 
-	// From now, the same identity will always be returned to a given user
-	return &identity, nil
+	// From now on, the same identity will always be returned to a given user
+	return identity, nil
 }
 
-func getPublicIdentity(userID string) (*string, error) {
+func getPublicIdentity(userID string) (string, error) {
 	// Retrieve a previously stored identity for this user
 	tkIdentity := retrieveIdentity(userID)
 	if tkIdentity == "" {
@@ -79,7 +79,7 @@ Read more about identities in the [Tanker guide](https://docs.tanker.io/latest/g
 Run tests:
 
 ```bash
-go test ./... -test.v
+go test -v
 ```
 
 ## Contributing
