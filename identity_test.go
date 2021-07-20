@@ -2,6 +2,7 @@ package identity
 
 import (
 	"encoding/base64"
+	"github.com/iancoleman/orderedmap"
 	"golang.org/x/crypto/blake2b"
 
 	"golang.org/x/crypto/ed25519"
@@ -52,17 +53,17 @@ var _ = Describe("newIdentity", func() {
 		identity, err := newIdentity(conf, userID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(identity.TrustchainID).To(Equal(AppID))
-		Expect(identity.Target).To(Equal("user"))
+		Expect(identity.Target).To(Equal(TargetUser))
 		Expect(identity.Value).To(Equal(base64.StdEncoding.EncodeToString(obfuscatedUserID)))
 		checkDelegationSignature(identity, trustchainPublicKey)
 	})
 
 	It("newProvisionalIdentity returns a valid tanker provisional identity", func() {
-		provisionalIdentity, err := newProvisionalIdentity(conf, "email", "email@example.com")
+		provisionalIdentity, err := newProvisionalIdentity(conf, TargetEmail, "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		Expect(provisionalIdentity.TrustchainID).To(Equal(AppID))
-		Expect(provisionalIdentity.Target).To(Equal("email"))
+		Expect(provisionalIdentity.Target).To(Equal(TargetEmail))
 		Expect(provisionalIdentity.Value).To(Equal("email@example.com"))
 	})
 
@@ -104,7 +105,7 @@ var _ = Describe("generate", func() {
 		id := &identity{}
 		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("user"))
+		Expect(id.Target).Should(Equal(TargetUser))
 	})
 
 	It("generates ordered JSON for permanent identities", func() {
@@ -122,7 +123,7 @@ var _ = Describe("generate", func() {
 	It("can upgrade an identity", func() {
 		identity, _ := Create(appConfig, "userID")
 		publicIdentity, _ := GetPublicIdentity(identity)
-		provIdentity, _ := CreateProvisional(appConfig, "email", "userID@tanker.io")
+		provIdentity, _ := CreateProvisional(appConfig, TargetEmail, "userID@tanker.io")
 		publicProvIdentity, _ := GetPublicIdentity(provIdentity)
 
 		identityJson, _ := base64.StdEncoding.DecodeString(identity)
@@ -147,6 +148,8 @@ var _ = Describe("generate", func() {
 	})
 
 	It("can upgrade an email provisional identity", func() {
+		id := orderedmap.OrderedMap{}
+		Base64JsonDecode(newPublicProvisionalIdentity, &id)
 		upgradedIdentity, err := UpgradeIdentity(oldPublicProvisionalIdentity)
 		Expect(err).ShouldNot(HaveOccurred())
 
@@ -178,13 +181,13 @@ var _ = Describe("generate", func() {
 	})
 
 	It("generates a valid provisional identity in b64 form", func() {
-		identityB64, err := CreateProvisional(appConfig, "email", "email@example.com")
+		identityB64, err := CreateProvisional(appConfig, TargetEmail, "email@example.com")
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
 		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("email"))
+		Expect(id.Target).Should(Equal(TargetEmail))
 		Expect(id.Value).Should(Equal("email@example.com"))
 		Expect(id.PrivateEncryptionKey).ShouldNot(BeEmpty())
 		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
@@ -193,13 +196,13 @@ var _ = Describe("generate", func() {
 	})
 
 	It("generates a valid phone_number provisional identity in b64 form", func() {
-		identityB64, err := CreateProvisional(appConfig, "phone_number", userPhone)
+		identityB64, err := CreateProvisional(appConfig, TargetPhoneNumber, userPhone)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
 		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("phone_number"))
+		Expect(id.Target).Should(Equal(TargetPhoneNumber))
 		Expect(id.Value).Should(Equal(userPhone))
 		Expect(id.PrivateEncryptionKey).ShouldNot(BeEmpty())
 		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
@@ -211,7 +214,7 @@ var _ = Describe("generate", func() {
 		id := &provisionalIdentity{}
 		err := Base64JsonDecode(phoneNumberProvisionalIdentity, id)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("phone_number"))
+		Expect(id.Target).Should(Equal(TargetPhoneNumber))
 		Expect(id.Value).Should(Equal(userPhone))
 		Expect(base64.StdEncoding.EncodeToString(id.PrivateEncryptionKey)).
 			Should(Equal("tVTS9nHxr2MdVuTR5clww0EXbwis8HixgPINbQJx1U4="))
@@ -235,7 +238,7 @@ var _ = Describe("generate", func() {
 		id := &publicProvisionalIdentity{}
 		err2 := Base64JsonDecode(publicIdentity, id)
 		Expect(err2).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("hashed_phone_number"))
+		Expect(id.Target).Should(Equal(TargetHashedPhoneNumber))
 		Expect(id.Value).Should(Equal(hashedPhone))
 		Expect(base64.StdEncoding.EncodeToString(id.PublicEncryptionKey)).
 			Should(Equal("n6m9X5Lf0Znaz8f0+schLIBNm+piPhnsYvAvXw2KEAw="))
@@ -258,7 +261,7 @@ var _ = Describe("generate", func() {
 	It("creates a valid public identity from a provisional identity", func() {
 		email := "email@example.com"
 		hashedEmail := blake2b.Sum256([]byte(email))
-		identityB64, err := CreateProvisional(appConfig, "email", email)
+		identityB64, err := CreateProvisional(appConfig, TargetEmail, email)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}
@@ -269,7 +272,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		expectedId := provisionalID.publicProvisionalIdentity
-		expectedId.Target = "hashed_email"
+		expectedId.Target = TargetHashedEmail
 		expectedId.Value = base64.StdEncoding.EncodeToString(hashedEmail[:])
 
 		extractedPublicID := &publicProvisionalIdentity{}
