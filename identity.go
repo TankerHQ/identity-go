@@ -35,14 +35,14 @@ type provisionalIdentity struct {
 	PrivateEncryptionKey []byte `json:"private_encryption_key"`
 }
 
-func newIdentity(config config, userIDString string) (identity, error) {
-	generatedAppID := newAppId(config.AppSecret)
+func newIdentity(cfg config, userIDString string) (identity, error) {
+	generatedAppID := newAppId(cfg.AppSecret)
 
-	if !bytes.Equal(generatedAppID, config.AppID) {
+	if !bytes.Equal(generatedAppID, cfg.AppID) {
 		return identity{}, errors.New("app secret and app ID mismatch")
 	}
 
-	userID := hashUserID(config.AppID, userIDString)
+	userID := hashUserID(cfg.AppID, userIDString)
 	userSecret := newUserSecret(userID)
 
 	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
@@ -52,11 +52,11 @@ func newIdentity(config config, userIDString string) (identity, error) {
 
 	payload := append(epubSignKey, userID...)
 
-	delegationSignature := ed25519.Sign(config.AppSecret, payload)
+	delegationSignature := ed25519.Sign(cfg.AppSecret, payload)
 
-	identity := identity{
+	id := identity{
 		publicIdentity: publicIdentity{
-			TrustchainID: config.AppID,
+			TrustchainID: cfg.AppID,
 			Target:       "user",
 			Value:        base64.StdEncoding.EncodeToString(userID),
 		},
@@ -66,10 +66,10 @@ func newIdentity(config config, userIDString string) (identity, error) {
 		UserSecret:                   userSecret,
 	}
 
-	return identity, nil
+	return id, nil
 }
 
-func newProvisionalIdentity(config config, target string, value string) (provisionalIdentity, error) {
+func newProvisionalIdentity(cfg config, target string, value string) (provisionalIdentity, error) {
 	publicSignatureKey, privateSignatureKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return provisionalIdentity{}, err
@@ -79,10 +79,10 @@ func newProvisionalIdentity(config config, target string, value string) (provisi
 		return provisionalIdentity{}, err
 	}
 
-	provisionalIdentity := provisionalIdentity{
+	provId := provisionalIdentity{
 		publicProvisionalIdentity: publicProvisionalIdentity{
 			publicIdentity: publicIdentity{
-				TrustchainID: config.AppID,
+				TrustchainID: cfg.AppID,
 				Target:       target,
 				Value:        value,
 			},
@@ -93,7 +93,7 @@ func newProvisionalIdentity(config config, target string, value string) (provisi
 		PrivateEncryptionKey: privateEncryptionKey,
 	}
 
-	return provisionalIdentity, nil
+	return provId, nil
 }
 
 func hashProvisionalIdentityEmail(email string) (hash string) {
@@ -120,20 +120,20 @@ func GetPublicIdentity(b64Identity string) (string, error) {
 	return GetPublic(b64Identity)
 }
 
-func New(config Config, userID string) (string, error) {
-	conf, err := config.fromBase64()
+func New(cfg Config, userID string) (string, error) {
+	conf, err := cfg.fromBase64()
 	if err != nil {
 		return "", err
 	}
-	identity, err := newIdentity(conf, userID)
+	id, err := newIdentity(conf, userID)
 	if err != nil {
 		return "", err
 	}
-	return Base64JsonEncode(identity)
+	return Base64JsonEncode(id)
 }
 
-func NewProvisional(config Config, target string, value string) (string, error) {
-	conf, err := config.fromBase64()
+func NewProvisional(cfg Config, target string, value string) (string, error) {
+	conf, err := cfg.fromBase64()
 	if err != nil {
 		return "", err
 	}
@@ -141,11 +141,11 @@ func NewProvisional(config Config, target string, value string) (string, error) 
 	if target != "email" && target != "phone_number" {
 		return "", errors.New("unsupported provisional identity target")
 	}
-	identity, err := newProvisionalIdentity(conf, target, value)
+	provId, err := newProvisionalIdentity(conf, target, value)
 	if err != nil {
 		return "", err
 	}
-	return Base64JsonEncode(identity)
+	return Base64JsonEncode(provId)
 }
 
 func GetPublic(b64Identity string) (string, error) {
@@ -156,63 +156,63 @@ func GetPublic(b64Identity string) (string, error) {
 	}
 
 	var (
-		publicIdentity anyPublicIdentity
+		pubId anyPublicIdentity
 	)
 
-	err := Base64JsonDecode(b64Identity, &publicIdentity)
+	err := Base64JsonDecode(b64Identity, &pubId)
 	if err != nil {
 		return "", err
 	}
 
-	if publicIdentity.Target != "user" &&
-		publicIdentity.Target != "email" &&
-		publicIdentity.Target != "phone_number" {
+	if pubId.Target != "user" &&
+		pubId.Target != "email" &&
+		pubId.Target != "phone_number" {
 		return "", errors.New("unsupported identity target")
 	}
 
-	if publicIdentity.Target != "user" {
-		if publicIdentity.Target == "email" {
-			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
+	if pubId.Target != "user" {
+		if pubId.Target == "email" {
+			pubId.Value = hashProvisionalIdentityEmail(pubId.Value)
 		} else {
-			privateIdentity := orderedmap.New()
-			err := Base64JsonDecode(b64Identity, &privateIdentity)
+			privId := orderedmap.New()
+			err := Base64JsonDecode(b64Identity, &privId)
 			if err != nil {
 				return "", err
 			}
-			privateSignatureKey, found := privateIdentity.Get("private_signature_key")
+			privateSignatureKey, found := privId.Get("private_signature_key")
 			if !found {
 				return "", errors.New("invalid tanker identity")
 			}
-			publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, privateSignatureKey.(string))
+			pubId.Value = hashProvisionalIdentityValue(pubId.Value, privateSignatureKey.(string))
 		}
-		publicIdentity.Target = "hashed_" + publicIdentity.Target
+		pubId.Target = "hashed_" + pubId.Target
 	}
 
-	return Base64JsonEncode(publicIdentity)
+	return Base64JsonEncode(pubId)
 }
 
 func UpgradeIdentity(b64Identity string) (string, error) {
-	identity := orderedmap.New()
-	err := Base64JsonDecode(b64Identity, &identity)
+	id := orderedmap.New()
+	err := Base64JsonDecode(b64Identity, &id)
 	if err != nil {
 		return "", err
 	}
 
-	_, isPrivate := identity.Get("private_encryption_key")
-	target, found := identity.Get("target")
+	_, isPrivate := id.Get("private_encryption_key")
+	target, found := id.Get("target")
 	if !found {
 		return "", errors.New("invalid provisional identity (missing target field)")
 	}
 	if target == "email" && !isPrivate {
-		identity.Set("target", "hashed_email")
-		value, valueFound := identity.Get("value")
+		id.Set("target", "hashed_email")
+		value, valueFound := id.Get("value")
 		if !valueFound {
 			return "", errors.New("unsupported identity without value")
 		}
 
 		hashedEmail := blake2b.Sum256([]byte(value.(string)))
-		identity.Set("value", base64.StdEncoding.EncodeToString(hashedEmail[:]))
+		id.Set("value", base64.StdEncoding.EncodeToString(hashedEmail[:]))
 	}
 
-	return Base64JsonEncode(identity)
+	return Base64JsonEncode(id)
 }
