@@ -8,35 +8,35 @@ import (
 
 )
 
-func Create(config Config, userID string) (*string, error) {
+func Create(config Config, userID string) (string, error) {
 	conf, err := config.fromBase64()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	identity, err := newIdentity(*conf, userID)
+	identity, err := newIdentity(conf, userID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return Base64JsonEncode(identity)
 }
 
-func CreateProvisional(config Config, target string, value string) (*string, error) {
+func CreateProvisional(config Config, target string, value string) (string, error) {
 	conf, err := config.fromBase64()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if target != "email" && target != "phone_number" {
-		return nil, errors.New("unsupported provisional identity target")
+		return "", errors.New("unsupported provisional identity target")
 	}
-	identity, err := newProvisionalIdentity(*conf, target, value)
+	identity, err := newProvisionalIdentity(conf, target, value)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return Base64JsonEncode(identity)
 }
 
-func GetPublicIdentity(b64Identity string) (*string, error) {
+func GetPublicIdentity(b64Identity string) (string, error) {
 	type anyPublicIdentity struct {
 		publicIdentity
 		PublicSignatureKey  []byte `json:"public_signature_key,omitempty"`
@@ -45,13 +45,13 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	publicIdentity := &anyPublicIdentity{}
 	err := Base64JsonDecode(b64Identity, publicIdentity)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if publicIdentity.Target != "user" &&
 		publicIdentity.Target != "email" &&
 		publicIdentity.Target != "phone_number" {
-		return nil, errors.New("Unsupported identity target")
+		return "", errors.New("Unsupported identity target")
 	}
 
 	if publicIdentity.Target != "user" {
@@ -61,11 +61,11 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 			privateIdentity := orderedmap.New()
 			err := Base64JsonDecode(b64Identity, &privateIdentity)
 			if err != nil {
-				return nil, err
+				return "", err
 			}
 			privateSignatureKey, found := privateIdentity.Get("private_signature_key")
 			if !found {
-				return nil, errors.New("invalid tanker identity")
+				return "", errors.New("invalid tanker identity")
 			}
 			publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, privateSignatureKey.(string))
 		}
@@ -75,23 +75,23 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	return Base64JsonEncode(publicIdentity)
 }
 
-func UpgradeIdentity(b64Identity string) (*string, error) {
+func UpgradeIdentity(b64Identity string) (string, error) {
 	identity := orderedmap.New()
 	err := Base64JsonDecode(b64Identity, &identity)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	_, isPrivate := identity.Get("private_encryption_key")
 	target, found := identity.Get("target")
 	if !found {
-		return nil, errors.New("invalid provisional identity (missing target field)")
+		return "", errors.New("invalid provisional identity (missing target field)")
 	}
 	if target == "email" && !isPrivate {
 		identity.Set("target", "hashed_email")
 		value, valueFound := identity.Get("value")
 		if !valueFound {
-			return nil, errors.New("unsupported identity without value")
+			return "", errors.New("unsupported identity without value")
 		}
 
 		hashedEmail := blake2b.Sum256([]byte(value.(string)))

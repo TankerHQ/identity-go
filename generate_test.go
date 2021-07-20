@@ -34,7 +34,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &identity{}
-		err = Base64JsonDecode(*identityB64, id)
+		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("user"))
 	})
@@ -48,29 +48,29 @@ var _ = Describe("generate", func() {
 
 		orderedJson, _ := Base64JsonEncode(id)
 
-		Expect(goodPermanentIdentity).Should(Equal(*orderedJson))
+		Expect(goodPermanentIdentity).Should(Equal(orderedJson))
 	})
 
 	It("can upgrade an identity", func() {
 		identity, _ := Create(appConfig, "userID")
-		publicIdentity, _ := GetPublicIdentity(*identity)
+		publicIdentity, _ := GetPublicIdentity(identity)
 		provIdentity, _ := CreateProvisional(appConfig, "email", "userID@tanker.io")
-		publicProvIdentity, _ := GetPublicIdentity(*provIdentity)
+		publicProvIdentity, _ := GetPublicIdentity(provIdentity)
 
-		identityJson, _ := base64.StdEncoding.DecodeString(*identity)
-		publicIdentityJson, _ := base64.StdEncoding.DecodeString(*publicIdentity)
-		provIdentityJson, _ := base64.StdEncoding.DecodeString(*provIdentity)
-		publicProvIdentityJson, _ := base64.StdEncoding.DecodeString(*publicProvIdentity)
+		identityJson, _ := base64.StdEncoding.DecodeString(identity)
+		publicIdentityJson, _ := base64.StdEncoding.DecodeString(publicIdentity)
+		provIdentityJson, _ := base64.StdEncoding.DecodeString(provIdentity)
+		publicProvIdentityJson, _ := base64.StdEncoding.DecodeString(publicProvIdentity)
 
-		upgradedIdentity, _ := UpgradeIdentity(*identity)
-		upgradedPublicIdentity, _ := UpgradeIdentity(*publicIdentity)
-		upgradedProvIdentity, _ := UpgradeIdentity(*provIdentity)
-		upgradedPublicProvIdentity, _ := UpgradeIdentity(*publicProvIdentity)
+		upgradedIdentity, _ := UpgradeIdentity(identity)
+		upgradedPublicIdentity, _ := UpgradeIdentity(publicIdentity)
+		upgradedProvIdentity, _ := UpgradeIdentity(provIdentity)
+		upgradedPublicProvIdentity, _ := UpgradeIdentity(publicProvIdentity)
 
-		upgradedIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedIdentity)
-		upgradedPublicIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedPublicIdentity)
-		upgradedProvIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedProvIdentity)
-		upgradedPublicProvIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedPublicProvIdentity)
+		upgradedIdentityJson, _ := base64.StdEncoding.DecodeString(upgradedIdentity)
+		upgradedPublicIdentityJson, _ := base64.StdEncoding.DecodeString(upgradedPublicIdentity)
+		upgradedProvIdentityJson, _ := base64.StdEncoding.DecodeString(upgradedProvIdentity)
+		upgradedPublicProvIdentityJson, _ := base64.StdEncoding.DecodeString(upgradedPublicProvIdentity)
 
 		Expect(upgradedIdentityJson).Should(Equal(identityJson))
 		Expect(upgradedPublicIdentityJson).Should(Equal(publicIdentityJson))
@@ -82,7 +82,7 @@ var _ = Describe("generate", func() {
 		upgradedIdentity, err := UpgradeIdentity(oldPublicProvisionalIdentity)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		Expect(*upgradedIdentity).Should(Equal(newPublicProvisionalIdentity))
+		Expect(upgradedIdentity).Should(Equal(newPublicProvisionalIdentity))
 	})
 
 	It("can fail to upgrade an identity to make codecov happy", func() {
@@ -114,7 +114,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
-		err = Base64JsonDecode(*identityB64, id)
+		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("email"))
 		Expect(id.Value).Should(Equal("email@example.com"))
@@ -129,7 +129,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		id := &provisionalIdentity{}
-		err = Base64JsonDecode(*identityB64, id)
+		err = Base64JsonDecode(identityB64, id)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("phone_number"))
 		Expect(id.Value).Should(Equal(userPhone))
@@ -162,10 +162,10 @@ var _ = Describe("generate", func() {
 		hashedPhone := hashProvisionalIdentityValue(userPhone, base64.StdEncoding.EncodeToString(privId.PrivateSignatureKey))
 
 		publicIdentity, _ := GetPublicIdentity(phoneNumberProvisionalIdentity)
-		Expect(*publicIdentity).Should(Equal(phoneNumberPublicProvisionalIdentity))
+		Expect(publicIdentity).Should(Equal(phoneNumberPublicProvisionalIdentity))
 
 		id := &publicProvisionalIdentity{}
-		err2 := Base64JsonDecode(*publicIdentity, id)
+		err2 := Base64JsonDecode(publicIdentity, id)
 		Expect(err2).ShouldNot(HaveOccurred())
 		Expect(id.Target).Should(Equal("hashed_phone_number"))
 		Expect(id.Value).Should(Equal(hashedPhone))
@@ -180,7 +180,7 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		extractedPublicID := &publicIdentity{}
-		_ = Base64JsonDecode(*publicID, extractedPublicID)
+		_ = Base64JsonDecode(publicID, extractedPublicID)
 
 		extractedGoodPublicID := &publicIdentity{}
 		_ = Base64JsonDecode(goodPublicIdentity, extractedGoodPublicID)
@@ -194,10 +194,10 @@ var _ = Describe("generate", func() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		provisionalID := &provisionalIdentity{}
-		_ = Base64JsonDecode(*identityB64, provisionalID)
+		_ = Base64JsonDecode(identityB64, provisionalID)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		publicID, err := GetPublicIdentity(*identityB64)
+		publicID, err := GetPublicIdentity(identityB64)
 		Expect(err).ShouldNot(HaveOccurred())
 
 		expectedId := provisionalID.publicProvisionalIdentity
@@ -205,7 +205,7 @@ var _ = Describe("generate", func() {
 		expectedId.Value = base64.StdEncoding.EncodeToString(hashedEmail[:])
 
 		extractedPublicID := &publicProvisionalIdentity{}
-		_ = Base64JsonDecode(*publicID, extractedPublicID)
+		_ = Base64JsonDecode(publicID, extractedPublicID)
 		Expect(err).ShouldNot(HaveOccurred())
 		Expect(*extractedPublicID).Should(Equal(expectedId))
 	})

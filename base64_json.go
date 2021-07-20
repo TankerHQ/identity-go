@@ -23,12 +23,12 @@ func jsonSort(a *orderedmap.Pair, b *orderedmap.Pair) bool {
 	return jsonOrder[a.Key()] < jsonOrder[b.Key()]
 }
 
-func Base64JsonEncode(v interface{}) (*string, error) {
+func Base64JsonEncode(v interface{}) (string, error) {
 	// Note: []byte values are encoded as base64-encoded strings
 	//       (see: https://golang.org/pkg/encoding/json/#Marshal)
 	jsonToken, err := json.Marshal(v)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	// Struct fields are marshalled in order of declaration, but we can't easily change the order
@@ -36,16 +36,16 @@ func Base64JsonEncode(v interface{}) (*string, error) {
 	o := orderedmap.New()
 	err = o.UnmarshalJSON(jsonToken)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	o.Sort(jsonSort)
 	orderedJson, err := json.Marshal(o)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	b64Token := base64.StdEncoding.EncodeToString(orderedJson)
-	return &b64Token, nil
+	return b64Token, nil
 }
 
 func Base64JsonDecode(b64 string, v interface{}) error {
