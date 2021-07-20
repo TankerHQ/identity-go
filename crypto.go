@@ -6,7 +6,7 @@ import (
 	"golang.org/x/crypto/curve25519"
 )
 
-func NewKeyPair() (PublicKey []byte, PrivateKey []byte, Error error) {
+func NewKeyPair() ([]byte, []byte, error) {
 	sk := [32]byte{}
 	if _, err := rand.Read(sk[:]); err != nil {
 		return nil, nil, err
