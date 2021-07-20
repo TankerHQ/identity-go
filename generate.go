@@ -42,8 +42,12 @@ func GetPublicIdentity(b64Identity string) (string, error) {
 		PublicSignatureKey  []byte `json:"public_signature_key,omitempty"`
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
-	publicIdentity := &anyPublicIdentity{}
-	err := Base64JsonDecode(b64Identity, publicIdentity)
+
+	var (
+		publicIdentity anyPublicIdentity
+	)
+
+	err := Base64JsonDecode(b64Identity, &publicIdentity)
 	if err != nil {
 		return "", err
 	}
