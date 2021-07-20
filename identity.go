@@ -50,7 +50,9 @@ func newIdentity(cfg config, userIDString string) (identity, error) {
 		return identity{}, err
 	}
 
-	payload := append(epubSignKey, userID...)
+	payload := make([]byte, len(epubSignKey) + len(userID))
+	copy(payload, epubSignKey)
+	copy(payload[len(epubSignKey):], userID)
 
 	delegationSignature := ed25519.Sign(cfg.AppSecret, payload)
 
