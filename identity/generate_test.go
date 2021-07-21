@@ -3,7 +3,7 @@ package identity
 import (
 	"encoding/base64"
 
-	"github.com/TankerHQ/identity-go/v2/b64json"
+	"github.com/TankerHQ/identity-go/v3/b64json"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"golang.org/x/crypto/blake2b"

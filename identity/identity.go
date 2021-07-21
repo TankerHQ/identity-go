@@ -6,7 +6,7 @@ import (
 	"errors"
 	"golang.org/x/crypto/blake2b"
 
-	"github.com/TankerHQ/identity-go/v2/curve25519"
+	"github.com/TankerHQ/identity-go/v3/curve25519"
 	"golang.org/x/crypto/ed25519"
 )
 
