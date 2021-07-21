@@ -1,7 +1,7 @@
 package curve25519_test
 
 import (
-	"github.com/TankerHQ/identity-go/v2/curve25519"
+	"github.com/TankerHQ/identity-go/v3/curve25519"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )

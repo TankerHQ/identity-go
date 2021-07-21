@@ -1,4 +1,4 @@
-module github.com/TankerHQ/identity-go/v2
+module github.com/TankerHQ/identity-go/v3
 
 go 1.12
 

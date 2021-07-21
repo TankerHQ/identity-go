@@ -6,7 +6,7 @@ import (
 	"github.com/iancoleman/orderedmap"
 	"golang.org/x/crypto/blake2b"
 
-	"github.com/TankerHQ/identity-go/v2/b64json"
+	"github.com/TankerHQ/identity-go/v3/b64json"
 )
 
 func Create(config Config, userID string) (*string, error) {
