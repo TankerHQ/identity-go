@@ -86,7 +86,10 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 
 	_, isPrivate := identity.Get("private_encryption_key")
 	target, found := identity.Get("target")
-	if found && target == "email" && !isPrivate {
+	if !found {
+		return nil, errors.New("invalid provisional identity (missing target field)")
+	}
+	if target == "email" && !isPrivate {
 		identity.Set("target", "hashed_email")
 		value, valueFound := identity.Get("value")
 		if !valueFound {
