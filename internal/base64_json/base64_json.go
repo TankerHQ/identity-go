@@ -1,4 +1,4 @@
-package identity
+package base64_json
 
 import (
 	"encoding/base64"
@@ -23,9 +23,9 @@ func jsonSort(a *orderedmap.Pair, b *orderedmap.Pair) bool {
 	return jsonOrder[a.Key()] < jsonOrder[b.Key()]
 }
 
-// Base64JsonEncode returns a base64-encoded, JSON marshalled representation
+// Encode returns a base64-encoded, JSON marshalled representation
 // of v, along with any error encountered in the process.
-func Base64JsonEncode(v interface{}) (string, error) {
+func Encode(v interface{}) (string, error) {
 	// Note: []byte values are encoded as base64-encoded strings
 	//       (see: https://golang.org/pkg/encoding/json/#Marshal)
 	jsonToken, err := json.Marshal(v)
@@ -50,10 +50,10 @@ func Base64JsonEncode(v interface{}) (string, error) {
 	return b64Token, nil
 }
 
-// Base64JsonDecode fills the underlying value of v with the JSON unmarshalled,
+// Decode fills the underlying value of v with the JSON unmarshalled,
 // base64-decoded value represented by b64, along with any error encountered in
 // the process.
-func Base64JsonDecode(b64 string, v interface{}) error {
+func Decode(b64 string, v interface{}) error {
 	str, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
 		return err

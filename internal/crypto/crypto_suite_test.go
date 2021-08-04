@@ -1,4 +1,4 @@
-package identity_test
+package crypto_test
 
 import (
 	"testing"
