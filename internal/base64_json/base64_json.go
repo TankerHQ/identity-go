@@ -1,4 +1,4 @@
-package b64json
+package base64_json
 
 import (
 	"encoding/base64"

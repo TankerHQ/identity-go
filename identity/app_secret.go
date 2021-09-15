@@ -1,19 +1,10 @@
 package identity
 
 import (
-	"golang.org/x/crypto/blake2b"
+	identity2 "github.com/TankerHQ/identity-go/v3"
 )
 
-const AppSecretSize = 64
-const AppPublicKeySize = 32
-const authorSize = 32
-const appCreationNature = 1
+// DEPRECATED: use github.com/TankerHQ/identity-go/v3
 
-func generateAppID(appSecret []byte) []byte {
-	publicKey := appSecret[AppSecretSize-AppPublicKeySize : AppSecretSize]
-	author := make([]byte, 32)
-	payload := append([]byte{appCreationNature}, author...)
-	payload = append(payload, publicKey...)
-	hashed := blake2b.Sum256(payload)
-	return hashed[:]
-}
+const AppSecretSize = identity2.AppSecretSize
+const AppPublicKeySize = identity2.AppPublicKeySize

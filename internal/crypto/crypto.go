@@ -1,4 +1,4 @@
-package curve25519
+package crypto
 
 import (
 	"crypto/rand"
