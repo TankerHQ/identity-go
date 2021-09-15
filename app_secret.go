@@ -15,9 +15,12 @@ const (
 )
 
 func newAppId(appSecret []byte) []byte {
-	pubKeyStart, pubKeyEnd := AppSecretSize-AppPublicKeySize, AppSecretSize
+	const (
+		pubKeyStart = AppSecretSize - AppPublicKeySize
+		pubKeyEnd   = AppSecretSize
+	)
 
-	payload := make([]byte, 1 + authorSize + AppPublicKeySize)
+	payload := make([]byte, 1+authorSize+AppPublicKeySize)
 	payload[0] = appCreationNature
 	copy(payload[authorSize+1:], appSecret[pubKeyStart:pubKeyEnd])
 
