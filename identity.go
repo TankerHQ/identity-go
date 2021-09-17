@@ -40,7 +40,7 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 	generatedAppID := generateAppID(config.AppSecret)
 
 	if !bytes.Equal(generatedAppID, config.AppID) {
-		return nil, errors.New("App secret and app ID mismatch")
+		return nil, errors.New("app secret and app ID mismatch")
 	}
 
 	userID := hashUserID(config.AppID, userIDString)
