@@ -2,7 +2,6 @@ package identity
 
 import (
 	"encoding/base64"
-	"errors"
 	"fmt"
 )
 
@@ -19,17 +18,17 @@ type config struct {
 func (this Config) fromB64() (*config, error) {
 	appIDBytes, err := base64.StdEncoding.DecodeString(this.AppID)
 	if err != nil {
-		return nil, errors.New("Wrong AppID format, should be base64: " + this.AppID)
+		return nil, fmt.Errorf("unable to decode AppID '%s', should be a valid base64 string", this.AppID)
 	}
 	if len(appIDBytes) != AppPublicKeySize {
-		return nil, fmt.Errorf("Expected App ID of size %d, got %d", AppPublicKeySize, len(appIDBytes))
+		return nil, fmt.Errorf("wrong byte size for AppID: %d, should be %d", len(appIDBytes), AppPublicKeySize)
 	}
 	appSecretBytes, err := base64.StdEncoding.DecodeString(this.AppSecret)
 	if err != nil {
-		return nil, errors.New("Wrong AppSecret format, should be base64: " + this.AppSecret)
+		return nil, fmt.Errorf("unable to decode AppSecret '%s', should be a valid base64 string", this.AppSecret)
 	}
 	if len(appSecretBytes) != AppSecretSize {
-		return nil, fmt.Errorf("Expected App secret of size %d, got %d", AppSecretSize, len(appSecretBytes))
+		return nil, fmt.Errorf("wrong byte size for AppSecret: %d, should be %d", len(appSecretBytes), AppSecretSize)
 	}
 	return &config{
 		AppID:     appIDBytes,
