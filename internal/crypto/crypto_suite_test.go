@@ -1,4 +1,4 @@
-package curve25519_test
+package crypto_test
 
 import (
 	"testing"

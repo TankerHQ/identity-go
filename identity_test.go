@@ -26,9 +26,9 @@ var _ = Describe("generateIdentity", func() {
 	var (
 		trustchainPublicKey []byte
 		AppSecret           []byte
-		AppID               []byte
-		conf                config
-		userID              = "userID"
+		AppID  []byte
+		conf   config
+		userID = "userID"
 		obfuscatedUserID    []byte
 	)
 
