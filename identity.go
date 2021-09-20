@@ -40,7 +40,7 @@ type provisionalIdentity struct {
 
 
 func Create(config Config, userID string) (*string, error) {
-	conf, err := config.fromB64()
+	conf, err := config.fromBase64()
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func Create(config Config, userID string) (*string, error) {
 }
 
 func CreateProvisional(config Config, target string, value string) (*string, error) {
-	conf, err := config.fromB64()
+	conf, err := config.fromBase64()
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 
 
 func generateIdentity(config config, userIDString string) (*identity, error) {
-	generatedAppID := generateAppID(config.AppSecret)
+	generatedAppID := newAppId(config.AppSecret)
 
 	if !bytes.Equal(generatedAppID, config.AppID) {
 		return nil, errors.New("app secret and app ID mismatch")
