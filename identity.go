@@ -61,11 +61,11 @@ func CreateProvisional(config Config, target string, value string) (*string, err
 		return nil, errors.New("unsupported provisional identity target")
 	}
 
-	identity, err := generateProvisionalIdentity(*conf, target, value)
+	provisional, err := generateProvisionalIdentity(*conf, target, value)
 	if err != nil {
 		return nil, err
 	}
-	return base64_json.Encode(identity)
+	return base64_json.Encode(provisional)
 }
 
 func GetPublicIdentity(b64Identity string) (*string, error) {
@@ -135,14 +135,14 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 
 
 func generateIdentity(config config, userIDString string) (*identity, error) {
-	generatedAppID := newAppId(config.AppSecret)
+	generatedAppID := getAppId(config.AppSecret)
 
 	if !bytes.Equal(generatedAppID, config.AppID) {
 		return nil, errors.New("app secret and app ID mismatch")
 	}
 
 	userID := hashUserID(config.AppID, userIDString)
-	userSecret := createUserSecret(userID)
+	userSecret := newUserSecret(userID)
 
 	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
