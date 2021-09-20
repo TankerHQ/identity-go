@@ -52,7 +52,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	if publicIdentity.Target != "user" &&
 		publicIdentity.Target != "email" &&
 		publicIdentity.Target != "phone_number" {
-		return nil, errors.New("Unsupported identity target")
+		return nil, errors.New("unsupported identity target")
 	}
 
 	if publicIdentity.Target != "user" {
