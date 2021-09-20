@@ -74,9 +74,9 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		PublicSignatureKey  []byte `json:"public_signature_key,omitempty"`
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
+
 	publicIdentity := &anyPublicIdentity{}
-	err := base64_json.Decode(b64Identity, publicIdentity)
-	if err != nil {
+	if err := base64_json.Decode(b64Identity, publicIdentity) ; err != nil {
 		return nil, err
 	}
 
@@ -91,8 +91,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
 		} else {
 			privateIdentity := orderedmap.New()
-			err := base64_json.Decode(b64Identity, &privateIdentity)
-			if err != nil {
+			if err := base64_json.Decode(b64Identity, &privateIdentity) ; err != nil {
 				return nil, err
 			}
 			privateSignatureKey, found := privateIdentity.Get("private_signature_key")
@@ -109,8 +108,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 func UpgradeIdentity(b64Identity string) (*string, error) {
 	identity := orderedmap.New()
-	err := base64_json.Decode(b64Identity, &identity)
-	if err != nil {
+	if err := base64_json.Decode(b64Identity, &identity) ; err != nil {
 		return nil, err
 	}
 
@@ -119,6 +117,7 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 	if !found {
 		return nil, errors.New("invalid provisional identity (missing target field)")
 	}
+
 	if target == "email" && !isPrivate {
 		identity.Set("target", "hashed_email")
 		value, valueFound := identity.Get("value")
@@ -135,22 +134,17 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 
 
 func generateIdentity(config config, userIDString string) (*identity, error) {
-	generatedAppID := getAppId(config.AppSecret)
-
-	if !bytes.Equal(generatedAppID, config.AppID) {
+	if !bytes.Equal(getAppId(config.AppSecret), config.AppID) {
 		return nil, errors.New("app secret and app ID mismatch")
 	}
 
 	userID := hashUserID(config.AppID, userIDString)
-	userSecret := newUserSecret(userID)
-
 	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, err
 	}
 
 	payload := append(epubSignKey, userID...)
-
 	delegationSignature := ed25519.Sign(config.AppSecret, payload)
 
 	identity := identity{
@@ -162,7 +156,7 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 		DelegationSignature:          delegationSignature,
 		EphemeralPrivateSignatureKey: eprivSignKey,
 		EphemeralPublicSignatureKey:  epubSignKey,
-		UserSecret:                   userSecret,
+		UserSecret:                   newUserSecret(userID),
 	}
 
 	return &identity, nil
@@ -203,6 +197,6 @@ func hashProvisionalIdentityEmail(email string) (hash string) {
 func hashProvisionalIdentityValue(value string, privateSignatureKeyB64 string) (hash string) {
 	privateSignatureKey, _ := base64.StdEncoding.DecodeString(privateSignatureKeyB64)
 	hashSalt := blake2b.Sum256(privateSignatureKey)
-	hashedValue := blake2b.Sum256(append(hashSalt[:], []byte(value)...))
+	hashedValue := blake2b.Sum256(append(hashSalt[:], value...))
 	return base64.StdEncoding.EncodeToString(hashedValue[:])
 }
