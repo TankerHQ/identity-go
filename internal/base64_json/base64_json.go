@@ -53,9 +53,5 @@ func Decode(b64 string, v interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(buf, v)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal(buf, v)
 }
