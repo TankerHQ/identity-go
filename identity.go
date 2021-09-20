@@ -173,7 +173,7 @@ func generateProvisionalIdentity(config config, target string, value string) (*p
 	if err != nil {
 		return nil, err
 	}
-	publicEncryptionKey, privateEncryptionKey, err := crypto.GenerateKey()
+	publicEncryptionKey, privateEncryptionKey, err := crypto.NewKeyPair()
 	if err != nil {
 		return nil, err
 	}
