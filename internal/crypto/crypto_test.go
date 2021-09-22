@@ -1,29 +1,53 @@
-package crypto_test
+package crypto
 
 import (
-	"github.com/TankerHQ/identity-go/v3/internal/crypto"
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"bytes"
+	"crypto/rand"
+	"testing"
 )
 
-var _ = Describe("curve25519Generate", func() {
-	It("generates a non nil key pair", func() {
-		sk, pk, err := crypto.NewKeyPair()
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(len(sk)).Should(Equal(32))
-		Expect(len(pk)).Should(Equal(32))
+func TestNewKeyPair(t *testing.T) {
+	sk1, pk1, err := NewKeyPair()
+	if err != nil {
+		t.Fatal("error generating key pair")
+	}
+	sk2, pk2, err := NewKeyPair()
+	if err != nil {
+		t.Fatal("error generating key pair")
+	}
+	sk3, pk3, err := NewKeyPair()
+	if err != nil {
+		t.Fatal("error generating key pair")
+	}
+	sk4, pk4, err := NewKeyPair()
+	if err != nil {
+		t.Fatal("error generating key pair")
+	}
 
-		emptyArray := [32]byte{}
-		Expect(sk).ShouldNot(Equal(emptyArray[:]))
-		Expect(pk).ShouldNot(Equal(emptyArray[:]))
-	})
+	if bytes.Equal(sk1, sk2) ||
+		bytes.Equal(sk1, sk3) ||
+		bytes.Equal(sk1, sk4) ||
+		bytes.Equal(sk2, sk3) ||
+		bytes.Equal(sk2, sk4) ||
+		bytes.Equal(sk3, sk4) {
+		t.Fatal("same secret key generated twice")
+	}
 
-	It("generates different keys each time", func() {
-		sk, pk, err := crypto.NewKeyPair()
-		Expect(err).ShouldNot(HaveOccurred())
-		sk2, pk2, err := crypto.NewKeyPair()
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(sk).ShouldNot(Equal(sk2))
-		Expect(pk).ShouldNot(Equal(pk2))
-	})
-})
+	if bytes.Equal(pk1, pk2) ||
+		bytes.Equal(pk1, pk3) ||
+		bytes.Equal(pk1, pk4) ||
+		bytes.Equal(pk2, pk3) ||
+		bytes.Equal(pk2, pk4) ||
+		bytes.Equal(pk3, pk4) {
+		t.Fatal("same public key generated twice")
+	}
+}
+
+func TestNewKeyPair_Error(t *testing.T) {
+	buf := bytes.NewBuffer(nil)
+	rand.Reader = buf
+	_, _, err := NewKeyPair()
+	if err == nil {
+		t.Fatal("no error generating key pair with invalid rand.Reader")
+	}
+}
