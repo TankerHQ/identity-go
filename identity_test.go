@@ -1,281 +1,342 @@
 package identity
 
 import (
+	"bytes"
+	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
-	"golang.org/x/crypto/blake2b"
-
-	"golang.org/x/crypto/ed25519"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
+	"io"
+	"testing"
 )
 
-func checkDelegationSignature(identity identity, trustchainPublicKey []byte) {
-	obfuscatedUserID, _ := base64.StdEncoding.DecodeString(identity.Value)
-	signedData := append(
-		identity.EphemeralPublicSignatureKey,
-		obfuscatedUserID...)
-
-	Expect(ed25519.Verify(
-		trustchainPublicKey,
-		signedData,
-		identity.DelegationSignature,
-	)).To(Equal(true))
+func byteArray(n int) []byte {
+	buf := make([]byte, n)
+	rand.Read(buf)
+	return buf
 }
 
-var _ = Describe("generateIdentity", func() {
-	var (
-		trustchainPublicKey []byte
-		AppSecret           []byte
-		AppID  []byte
-		conf   config
-		userID = "userID"
-		obfuscatedUserID    []byte
-	)
+func base64id(n int) string {
+	return base64.StdEncoding.EncodeToString(byteArray(n))
+}
 
-	BeforeEach(func() {
-		trustchainPublicKeyStr := "r6oz1Rpl3dsMGu8te0LT02YZ/G8W9NeQmQv3uGSO/jE="
-		AppSecretStr := "cTMoGGUKhwN47ypq4xAXAtVkNWeyUtMltQnYwJhxWYSvqjPVGmXd2wwa7y17QtPTZhn8bxb015CZC/e4ZI7+MQ=="
-		AppIDStr := "tpoxyNzh0hU9G2i9agMvHyyd+pO6zGCjO9BfhrCLjd4="
+var (
+	goodAppSecretRaw   = byteArray(AppSecretSize)
+	validAppSecret     = base64.StdEncoding.EncodeToString(goodAppSecretRaw)
+	wrongSizeAppSecret = base64.StdEncoding.EncodeToString(goodAppSecretRaw[2:])
 
-		trustchainPublicKey, _ = base64.StdEncoding.DecodeString(trustchainPublicKeyStr)
-		AppSecret, _ = base64.StdEncoding.DecodeString(AppSecretStr)
-		AppID, _ = base64.StdEncoding.DecodeString(AppIDStr)
-		obfuscatedUserID = hashUserID(AppID, userID)
-		conf = config{
-			AppID:     AppID,
-			AppSecret: AppSecret,
+	validAppId     = base64.StdEncoding.EncodeToString(getAppId(goodAppSecretRaw))
+	wrongSizeAppId = base64id(AppPublicKeySize / 2)
+
+	notBase64Identity = "some identity"
+
+	validConf = Config{
+		AppID:     validAppId,
+		AppSecret: validAppSecret,
+	}
+
+	badConfsVector = []struct {
+		desc   string
+		config Config
+	}{
+		{
+			desc: "WrongSizeAppId",
+			config: Config{
+				AppID:     wrongSizeAppId,
+				AppSecret: validAppSecret,
+			},
+		},
+		{
+			desc: "WrongSizeAppSecret",
+			config: Config{
+				AppID:     validAppId,
+				AppSecret: wrongSizeAppSecret,
+			},
+		},
+		{
+			desc: "NotBase64AppId",
+			config: Config{
+				AppID:     "app ID",
+				AppSecret: validAppSecret,
+			},
+		},
+		{
+			desc: "NotBase64AppSecret",
+			config: Config{
+				AppID:     validAppId,
+				AppSecret: "app secret",
+			},
+		},
+		{
+			desc: "AppIdSecretMismatch",
+			config: Config{
+				AppID:     base64id(AppPublicKeySize),
+				AppSecret: validAppSecret,
+			},
+		},
+	}
+
+	validTargets = []string{
+		"email",
+		"phone_number",
+	}
+
+	invalidTarget = "____not_a_good_target____"
+)
+
+func TestCreate(t *testing.T) {
+	conf := Config{
+		AppID:     validAppId,
+		AppSecret: validAppSecret,
+	}
+
+	id, err := Create(conf, "userID")
+	if err != nil || id == nil || *id == "" {
+		t.Fatal("error creating identity with valid config")
+	}
+}
+
+func TestCreate_Error(t *testing.T) {
+
+	for _, conf := range badConfsVector {
+		t.Run(conf.desc, func(t *testing.T) {
+			_, err := Create(conf.config, "userID")
+			if err == nil {
+				t.Fatal("no error creating identity")
+			}
+		})
+	}
+
+	t.Run("UnavailableRandReader", func(t *testing.T) {
+		r := rand.Reader
+		defer func() {
+			rand.Reader = r
+		}()
+
+		rand.Reader = bytes.NewBuffer(nil)
+		_, err := Create(validConf, "userID")
+		if err == nil {
+			t.Fatal("no error creating identity")
+		}
+	})
+}
+
+func TestCreateProvisional(t *testing.T) {
+	for _, validTarget := range validTargets {
+		t.Run("Target/"+validTarget, func(t *testing.T) {
+			id, err := CreateProvisional(validConf, validTarget, "userID")
+			if err != nil || id == nil || *id == "" {
+				t.Fatal("error creating provisional identity with valid config")
+			}
+		})
+	}
+}
+
+// singleSuccessReader is a helper type to test the case when the first
+// rand.Read succeeds but not the second
+type singleSuccessReader struct {
+	r io.Reader
+	n int
+}
+
+func (s *singleSuccessReader) Read(p []byte) (int, error) {
+	if s.n == 1 {
+		return 0, errors.New("no more to read")
+	}
+	s.n++
+	return s.r.Read(p)
+}
+
+func TestCreateProvisional_Error(t *testing.T) {
+	for _, conf := range badConfsVector {
+		for _, target := range validTargets {
+			t.Run(conf.desc+"/"+target, func(t *testing.T) {
+				_, err := CreateProvisional(conf.config, target, "userID")
+				if err == nil {
+					t.Fatal("no error creating provisional identity")
+				}
+			})
+		}
+	}
+
+	t.Run("InvalidTarget", func(t *testing.T) {
+		_, err := CreateProvisional(validConf, invalidTarget, "userID")
+		if err == nil {
+			t.Fatal("no error creating provisional identity")
 		}
 	})
 
-	It("generateIdentity returns a valid tanker identity", func() {
-		identity, err := generateIdentity(conf, userID)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(identity.TrustchainID).To(Equal(AppID))
-		Expect(identity.Target).To(Equal("user"))
-		Expect(identity.Value).To(Equal(base64.StdEncoding.EncodeToString(obfuscatedUserID)))
-		checkDelegationSignature(*identity, trustchainPublicKey)
-	})
+	t.Run("UnavailableRandReader", func(t *testing.T) {
+		r := rand.Reader
+		defer func() {
+			rand.Reader = r
+		}()
 
-	It("generateProvisionalIdentity returns a valid tanker provisional identity", func() {
-		provisionalIdentity, err := generateProvisionalIdentity(conf, "email", "email@example.com")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		Expect(provisionalIdentity.TrustchainID).To(Equal(AppID))
-		Expect(provisionalIdentity.Target).To(Equal("email"))
-		Expect(provisionalIdentity.Value).To(Equal("email@example.com"))
-	})
-
-	It("returns an error if app ID and secret mismatch", func() {
-		mismatchingAppIDStr := "rB0/yEJWCUVYRtDZLtXaJqtneXQOsCSKrtmWw+V+ysc="
-		mismatchingAppID, _ := base64.StdEncoding.DecodeString(mismatchingAppIDStr)
-		invalidConf := config{AppID: mismatchingAppID, AppSecret: conf.AppSecret}
-		_, err := generateIdentity(invalidConf, "email@example.com")
-		Expect(err).Should(HaveOccurred())
-	})
-})
-
-var _ = Describe("generate", func() {
-	var (
-		goodIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJ1c2VyIiwidmFsdWUiOiJSRGEwZXE0WE51ajV0VjdoZGFwak94aG1oZVRoNFFCRE5weTRTdnk5WG9rPSIsImRlbGVnYXRpb25fc2lnbmF0dXJlIjoiVTlXUW9sQ3ZSeWpUOG9SMlBRbWQxV1hOQ2kwcW1MMTJoTnJ0R2FiWVJFV2lyeTUya1d4MUFnWXprTHhINmdwbzNNaUE5cisremhubW9ZZEVKMCtKQ3c9PSIsImVwaGVtZXJhbF9wdWJsaWNfc2lnbmF0dXJlX2tleSI6IlhoM2kweERUcHIzSFh0QjJRNTE3UUt2M2F6TnpYTExYTWRKRFRTSDRiZDQ9IiwiZXBoZW1lcmFsX3ByaXZhdGVfc2lnbmF0dXJlX2tleSI6ImpFRFQ0d1FDYzFERndvZFhOUEhGQ2xuZFRQbkZ1Rm1YaEJ0K2lzS1U0WnBlSGVMVEVOT212Y2RlMEhaRG5YdEFxL2RyTTNOY3N0Y3gwa05OSWZodDNnPT0iLCJ1c2VyX3NlY3JldCI6IjdGU2YvbjBlNzZRVDNzMERrdmV0UlZWSmhYWkdFak94ajVFV0FGZXh2akk9In0="
-
-		goodPublicIdentity = "eyJ0YXJnZXQiOiJ1c2VyIiwidHJ1c3RjaGFpbl9pZCI6InRwb3h5TnpoMGhVOUcyaTlhZ012SHl5ZCtwTzZ6R0NqTzlCZmhyQ0xqZDQ9IiwidmFsdWUiOiJSRGEwZXE0WE51ajV0VjdoZGFwak94aG1oZVRoNFFCRE5weTRTdnk5WG9rPSJ9"
-
-		oldPublicProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJlbWFpbCIsInZhbHVlIjoiYnJlbmRhbi5laWNoQHRhbmtlci5pbyIsInB1YmxpY19lbmNyeXB0aW9uX2tleSI6Ii8yajRkSTNyOFBsdkNOM3VXNEhoQTV3QnRNS09jQUNkMzhLNk4wcSttRlU9IiwicHVibGljX3NpZ25hdHVyZV9rZXkiOiJXN1FFUUJ1OUZYY1hJcE9ncTYydFB3Qml5RkFicFQxckFydUQwaC9OclRBPSJ9"
-		newPublicProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJoYXNoZWRfZW1haWwiLCJ2YWx1ZSI6IjB1MmM4dzhFSVpXVDJGelJOL3l5TTVxSWJFR1lUTkRUNVNrV1ZCdTIwUW89IiwicHVibGljX2VuY3J5cHRpb25fa2V5IjoiLzJqNGRJM3I4UGx2Q04zdVc0SGhBNXdCdE1LT2NBQ2QzOEs2TjBxK21GVT0iLCJwdWJsaWNfc2lnbmF0dXJlX2tleSI6Ilc3UUVRQnU5RlhjWElwT2dxNjJ0UHdCaXlGQWJwVDFyQXJ1RDBoL05yVEE9In0="
-		phoneNumberProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJwaG9uZV9udW1iZXIiLCJ2YWx1ZSI6IiszMzYxMTIyMzM0NCIsInB1YmxpY19lbmNyeXB0aW9uX2tleSI6Im42bTlYNUxmMFpuYXo4ZjArc2NoTElCTm0rcGlQaG5zWXZBdlh3MktFQXc9IiwicHJpdmF0ZV9lbmNyeXB0aW9uX2tleSI6InRWVFM5bkh4cjJNZFZ1VFI1Y2x3dzBFWGJ3aXM4SGl4Z1BJTmJRSngxVTQ9IiwicHVibGljX3NpZ25hdHVyZV9rZXkiOiJqcklEaWdTQ25BaTNHbDltSUFTbEFpU2hLQzdkQkxGVVpQOUN4TEdzYkg4PSIsInByaXZhdGVfc2lnbmF0dXJlX2tleSI6IlFIcWNMcjhicjZNM2JQblFtUWczcStxSENycDA1RGJjQnBMUGFUWlkwYTZPc2dPS0JJS2NDTGNhWDJZZ0JLVUNKS0VvTHQwRXNWUmsvMExFc2F4c2Z3PT0ifQ=="
-		phoneNumberPublicProvisionalIdentity = "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJoYXNoZWRfcGhvbmVfbnVtYmVyIiwidmFsdWUiOiJKZWFpUUFoOHg3amNpb1UybTRpaHkrQ3NISmx5Vys0VlZTU3M1U0hGVVR3PSIsInB1YmxpY19lbmNyeXB0aW9uX2tleSI6Im42bTlYNUxmMFpuYXo4ZjArc2NoTElCTm0rcGlQaG5zWXZBdlh3MktFQXc9IiwicHVibGljX3NpZ25hdHVyZV9rZXkiOiJqcklEaWdTQ25BaTNHbDltSUFTbEFpU2hLQzdkQkxGVVpQOUN4TEdzYkg4PSJ9"
-
-
-		appID     = "tpoxyNzh0hU9G2i9agMvHyyd+pO6zGCjO9BfhrCLjd4="
-		appSecret = "cTMoGGUKhwN47ypq4xAXAtVkNWeyUtMltQnYwJhxWYSvqjPVGmXd2wwa7y17QtPTZhn8bxb015CZC/e4ZI7+MQ=="
-		userPhone = "+33611223344"
-
-		appConfig = Config{
-			AppID:     appID,
-			AppSecret: appSecret,
+		rand.Reader = bytes.NewBuffer(nil)
+		_, err := CreateProvisional(validConf, validTargets[0], "userID")
+		if err == nil {
+			t.Fatal("no error creating provisional identity")
 		}
-	)
-
-	It("generates a valid identity in b64 form", func() {
-		identityB64, err := Create(appConfig, "userID")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		id := &identity{}
-		err = base64_json.Decode(*identityB64, id)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("user"))
 	})
 
-	It("generates ordered JSON for permanent identities", func() {
-		goodPermanentIdentity := "eyJ0cnVzdGNoYWluX2lkIjoidHBveHlOemgwaFU5RzJpOWFnTXZIeXlkK3BPNnpHQ2pPOUJmaHJDTGpkND0iLCJ0YXJnZXQiOiJ1c2VyIiwidmFsdWUiOiJSRGEwZXE0WE51ajV0VjdoZGFwak94aG1oZVRoNFFCRE5weTRTdnk5WG9rPSIsImRlbGVnYXRpb25fc2lnbmF0dXJlIjoiVTlXUW9sQ3ZSeWpUOG9SMlBRbWQxV1hOQ2kwcW1MMTJoTnJ0R2FiWVJFV2lyeTUya1d4MUFnWXprTHhINmdwbzNNaUE5cisremhubW9ZZEVKMCtKQ3c9PSIsImVwaGVtZXJhbF9wdWJsaWNfc2lnbmF0dXJlX2tleSI6IlhoM2kweERUcHIzSFh0QjJRNTE3UUt2M2F6TnpYTExYTWRKRFRTSDRiZDQ9IiwiZXBoZW1lcmFsX3ByaXZhdGVfc2lnbmF0dXJlX2tleSI6ImpFRFQ0d1FDYzFERndvZFhOUEhGQ2xuZFRQbkZ1Rm1YaEJ0K2lzS1U0WnBlSGVMVEVOT212Y2RlMEhaRG5YdEFxL2RyTTNOY3N0Y3gwa05OSWZodDNnPT0iLCJ1c2VyX3NlY3JldCI6IjdGU2YvbjBlNzZRVDNzMERrdmV0UlZWSmhYWkdFak94ajVFV0FGZXh2akk9In0="
+	t.Run("DisruptedRandReader", func(t *testing.T) {
+		r := rand.Reader
+		defer func() {
+			rand.Reader = r
+		}()
 
-		id := &identity{}
-		err := base64_json.Decode(goodPermanentIdentity, id)
-		Expect(err).ShouldNot(HaveOccurred())
+		rand.Reader = &singleSuccessReader{r: r, n: 0}
+		_, err := CreateProvisional(validConf, validTargets[0], "userID")
+		if err == nil {
+			t.Fatal("no error creating provisional identity")
+		}
+	})
+}
 
-		orderedJson, _ := base64_json.Encode(id)
+func assertStablePublic(t *testing.T, id *string) {
+	pub, err := GetPublicIdentity(*id)
+	if err != nil {
+		t.Fatal("error getting public identity")
+	}
 
-		Expect(goodPermanentIdentity).Should(Equal(*orderedJson))
+	pub2, err := GetPublicIdentity(*id)
+	if err != nil {
+		t.Fatal("error getting public identity")
+	}
+
+	if *pub != *pub2 {
+		t.Fatal("public identities differ")
+	}
+}
+
+func TestGetPublicIdentity_Identity(t *testing.T) {
+	id, err := Create(validConf, "userId")
+	if err != nil {
+		panic("err should be nil")
+	}
+
+	assertStablePublic(t, id)
+}
+
+func TestGetPublicIdentity_ProvisionalIdentity(t *testing.T) {
+	for _, target := range validTargets {
+		provisional, err := CreateProvisional(validConf, target, "userId")
+		if err != nil {
+			panic("error creating provisional identity")
+		}
+
+		t.Run(target, func(t *testing.T) {
+			assertStablePublic(t, provisional)
+		})
+	}
+}
+
+func TestGetPublicIdentity_Error(t *testing.T) {
+	t.Run("BadTarget", func(t *testing.T) {
+		fakeIdentity := map[string]string{
+			"target": invalidTarget,
+		}
+
+		fakeIdentityEncoded, err := base64_json.Encode(fakeIdentity)
+		if err != nil {
+			panic("error encoding fakeIdentity")
+		}
+
+		_, err = GetPublicIdentity(*fakeIdentityEncoded)
+		if err == nil {
+			t.Fatal("no error getting public identity")
+		}
 	})
 
-	It("can upgrade an identity", func() {
-		identity, _ := Create(appConfig, "userID")
-		publicIdentity, _ := GetPublicIdentity(*identity)
-		provIdentity, _ := CreateProvisional(appConfig, "email", "userID@tanker.io")
-		publicProvIdentity, _ := GetPublicIdentity(*provIdentity)
+	t.Run("InvalidIdentity", func(t *testing.T) {
+		fakeIdentity := map[string]string{
+			"target": "phone_number",
+		}
 
-		identityJson, _ := base64.StdEncoding.DecodeString(*identity)
-		publicIdentityJson, _ := base64.StdEncoding.DecodeString(*publicIdentity)
-		provIdentityJson, _ := base64.StdEncoding.DecodeString(*provIdentity)
-		publicProvIdentityJson, _ := base64.StdEncoding.DecodeString(*publicProvIdentity)
+		fakeIdentityEncoded, err := base64_json.Encode(fakeIdentity)
+		if err != nil {
+			panic("error encoding identity")
+		}
 
-		upgradedIdentity, _ := UpgradeIdentity(*identity)
-		upgradedPublicIdentity, _ := UpgradeIdentity(*publicIdentity)
-		upgradedProvIdentity, _ := UpgradeIdentity(*provIdentity)
-		upgradedPublicProvIdentity, _ := UpgradeIdentity(*publicProvIdentity)
-
-		upgradedIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedIdentity)
-		upgradedPublicIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedPublicIdentity)
-		upgradedProvIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedProvIdentity)
-		upgradedPublicProvIdentityJson, _ := base64.StdEncoding.DecodeString(*upgradedPublicProvIdentity)
-
-		Expect(upgradedIdentityJson).Should(Equal(identityJson))
-		Expect(upgradedPublicIdentityJson).Should(Equal(publicIdentityJson))
-		Expect(upgradedProvIdentityJson).Should(Equal(provIdentityJson))
-		Expect(upgradedPublicProvIdentityJson).Should(Equal(publicProvIdentityJson))
+		_, err = GetPublicIdentity(*fakeIdentityEncoded)
+		if err == nil {
+			t.Fatal("no error getting public identity")
+		}
 	})
 
-	It("can upgrade an email provisional identity", func() {
-		upgradedIdentity, err := UpgradeIdentity(oldPublicProvisionalIdentity)
-		Expect(err).ShouldNot(HaveOccurred())
+	t.Run("InvalidBase64", func(t *testing.T) {
+		_, err := GetPublicIdentity(notBase64Identity)
+		if err == nil {
+			t.Fatal("no error getting public identity")
+		}
+	})
+}
 
-		Expect(*upgradedIdentity).Should(Equal(newPublicProvisionalIdentity))
+func TestUpgradeIdentity(t *testing.T) {
+	for _, target := range validTargets {
+		prov, err := CreateProvisional(validConf, target, "userId")
+		if err != nil {
+			panic("error creating provisional identity")
+		}
+		pubProv, err := GetPublicIdentity(*prov)
+		if err != nil {
+			panic("error getting public identity")
+		}
+
+		t.Run("Private/"+target, func(t *testing.T) {
+			_, err := UpgradeIdentity(*prov)
+			if err != nil {
+				t.Fatal("error upgrading identity")
+			}
+		})
+		t.Run("Public/"+target, func(t *testing.T) {
+			_, err := UpgradeIdentity(*pubProv)
+			if err != nil {
+				t.Fatal("error upgrading identity")
+			}
+		})
+	}
+
+	t.Run("EmailNotPrivate", func(t *testing.T) {
+		fakeIdentity := map[string]string{
+			"target": "email",
+			"value":  "value",
+		}
+
+		fakeIdentityEncoded, _ := base64_json.Encode(fakeIdentity)
+		_, err := UpgradeIdentity(*fakeIdentityEncoded)
+		if err != nil {
+			t.Fatal("error upgrading identity")
+		}
+	})
+}
+
+func TestUpgradeIdentity_Error(t *testing.T) {
+	t.Run("BadBase64", func(t *testing.T) {
+		_, err := UpgradeIdentity(notBase64Identity)
+		if err == nil {
+			t.Fatal("no error upgrading identity")
+		}
 	})
 
-	It("can fail to upgrade an identity to make codecov happy", func() {
-		_, err := UpgradeIdentity("this is not going to deserialize very well")
-		Expect(err).Should(HaveOccurred())
+	t.Run("NoTarget", func(t *testing.T) {
+		noTarget := map[string]string{}
+		noTargetEncoded, _ := base64_json.Encode(noTarget)
+		_, err := UpgradeIdentity(*noTargetEncoded)
+		if err == nil {
+			t.Fatal("no error upgrading identity")
+		}
 	})
 
-	It("returns an error if the App secret is a valid base64 string but has an incorrect size", func() {
-		invalidAppSecret := base64.StdEncoding.EncodeToString([]byte{0xaa})
-		invalidConf := Config{AppID: appID, AppSecret: invalidAppSecret}
-		_, err := Create(invalidConf, "email@example.com")
-		Expect(err).Should(HaveOccurred())
+	t.Run("EmailNotPrivateNoValue", func(t *testing.T) {
+		fakeIdentity := map[string]string{
+			"target": "email",
+		}
+
+		fakeIdentityEncoded, _ := base64_json.Encode(fakeIdentity)
+		_, err := UpgradeIdentity(*fakeIdentityEncoded)
+		if err == nil {
+			t.Fatal("no error upgrading identity")
+		}
 	})
-
-	It("returns an error if the App ID is a valid base64 string but has an incorrect size", func() {
-		invalidAppID := base64.StdEncoding.EncodeToString([]byte{0xaa, 0xbb, 0xcc})
-		invalidConf := Config{AppID: invalidAppID, AppSecret: appSecret}
-		_, err := Create(invalidConf, "email@example.com")
-		Expect(err).Should(HaveOccurred())
-	})
-
-	It("fails to generate a provisional identity with an invalid target", func() {
-		_, err := CreateProvisional(appConfig, "INVALID!", "xxx")
-		Expect(err).Should(HaveOccurred())
-	})
-
-	It("generates a valid provisional identity in b64 form", func() {
-		identityB64, err := CreateProvisional(appConfig, "email", "email@example.com")
-		Expect(err).ShouldNot(HaveOccurred())
-
-		id := &provisionalIdentity{}
-		err = base64_json.Decode(*identityB64, id)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("email"))
-		Expect(id.Value).Should(Equal("email@example.com"))
-		Expect(id.PrivateEncryptionKey).ShouldNot(BeEmpty())
-		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
-		Expect(id.PrivateSignatureKey).ShouldNot(BeEmpty())
-		Expect(id.PublicSignatureKey).ShouldNot(BeEmpty())
-	})
-
-	It("generates a valid phone_number provisional identity in b64 form", func() {
-		identityB64, err := CreateProvisional(appConfig, "phone_number", userPhone)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		id := &provisionalIdentity{}
-		err = base64_json.Decode(*identityB64, id)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("phone_number"))
-		Expect(id.Value).Should(Equal(userPhone))
-		Expect(id.PrivateEncryptionKey).ShouldNot(BeEmpty())
-		Expect(id.PublicEncryptionKey).ShouldNot(BeEmpty())
-		Expect(id.PrivateSignatureKey).ShouldNot(BeEmpty())
-		Expect(id.PublicSignatureKey).ShouldNot(BeEmpty())
-	})
-
-	It("deserializes a valid phone_number provisional identity", func() {
-		id := &provisionalIdentity{}
-		err := base64_json.Decode(phoneNumberProvisionalIdentity, id)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("phone_number"))
-		Expect(id.Value).Should(Equal(userPhone))
-		Expect(base64.StdEncoding.EncodeToString(id.PrivateEncryptionKey)).
-			Should(Equal("tVTS9nHxr2MdVuTR5clww0EXbwis8HixgPINbQJx1U4="))
-		Expect(base64.StdEncoding.EncodeToString(id.PublicEncryptionKey)).
-			Should(Equal("n6m9X5Lf0Znaz8f0+schLIBNm+piPhnsYvAvXw2KEAw="))
-		Expect(base64.StdEncoding.EncodeToString(id.PrivateSignatureKey)).
-			Should(Equal("QHqcLr8br6M3bPnQmQg3q+qHCrp05DbcBpLPaTZY0a6OsgOKBIKcCLcaX2YgBKUCJKEoLt0EsVRk/0LEsaxsfw=="))
-		Expect(base64.StdEncoding.EncodeToString(id.PublicSignatureKey)).
-			Should(Equal("jrIDigSCnAi3Gl9mIASlAiShKC7dBLFUZP9CxLGsbH8="))
-	})
-
-	It("deserializes a valid phone_number public provisional identity", func() {
-		privId := &provisionalIdentity{}
-		err := base64_json.Decode(phoneNumberProvisionalIdentity, privId)
-		Expect(err).ShouldNot(HaveOccurred())
-		hashedPhone := hashProvisionalIdentityValue(userPhone, base64.StdEncoding.EncodeToString(privId.PrivateSignatureKey))
-
-		publicIdentity, _ := GetPublicIdentity(phoneNumberProvisionalIdentity)
-		Expect(*publicIdentity).Should(Equal(phoneNumberPublicProvisionalIdentity))
-
-		id := &publicProvisionalIdentity{}
-		err2 := base64_json.Decode(*publicIdentity, id)
-		Expect(err2).ShouldNot(HaveOccurred())
-		Expect(id.Target).Should(Equal("hashed_phone_number"))
-		Expect(id.Value).Should(Equal(hashedPhone))
-		Expect(base64.StdEncoding.EncodeToString(id.PublicEncryptionKey)).
-			Should(Equal("n6m9X5Lf0Znaz8f0+schLIBNm+piPhnsYvAvXw2KEAw="))
-		Expect(base64.StdEncoding.EncodeToString(id.PublicSignatureKey)).
-			Should(Equal("jrIDigSCnAi3Gl9mIASlAiShKC7dBLFUZP9CxLGsbH8="))
-	})
-
-	It("creates a valid public identity from an identity", func() {
-		publicID, err := GetPublicIdentity(goodIdentity)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		extractedPublicID := &publicIdentity{}
-		_ = base64_json.Decode(*publicID, extractedPublicID)
-
-		extractedGoodPublicID := &publicIdentity{}
-		_ = base64_json.Decode(goodPublicIdentity, extractedGoodPublicID)
-		Expect(*extractedGoodPublicID).Should(Equal(*extractedPublicID))
-	})
-
-	It("creates a valid public identity from a provisional identity", func() {
-		email := "email@example.com"
-		hashedEmail := blake2b.Sum256([]byte(email))
-		identityB64, err := CreateProvisional(appConfig, "email", email)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		provisionalID := &provisionalIdentity{}
-		_ = base64_json.Decode(*identityB64, provisionalID)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		publicID, err := GetPublicIdentity(*identityB64)
-		Expect(err).ShouldNot(HaveOccurred())
-
-		expectedId := provisionalID.publicProvisionalIdentity
-		expectedId.Target = "hashed_email"
-		expectedId.Value = base64.StdEncoding.EncodeToString(hashedEmail[:])
-
-		extractedPublicID := &publicProvisionalIdentity{}
-		_ = base64_json.Decode(*publicID, extractedPublicID)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(*extractedPublicID).Should(Equal(expectedId))
-	})
-})
+}
