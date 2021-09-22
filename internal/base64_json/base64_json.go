@@ -6,8 +6,8 @@ import (
 	"github.com/iancoleman/orderedmap"
 )
 
-func jsonSort(a *orderedmap.Pair, b *orderedmap.Pair) bool {
-	jsonOrder := map[string]int{
+func keyOrder(p1, p2 *orderedmap.Pair) bool {
+	keyIndexes := map[string]int{
 		"trustchain_id": 1,
 		"target": 2,
 		"value": 3,
@@ -20,40 +20,40 @@ func jsonSort(a *orderedmap.Pair, b *orderedmap.Pair) bool {
 		"public_signature_key": 10,
 		"private_signature_key": 11,
 	}
-	return jsonOrder[a.Key()] < jsonOrder[b.Key()]
+	return keyIndexes[p1.Key()] < keyIndexes[p2.Key()]
 }
 
 func Encode(v interface{}) (*string, error) {
 	// Note: []byte values are encoded as base64-encoded strings
 	//       (see: https://golang.org/pkg/encoding/json/#Marshal)
-	jsonToken, err := json.Marshal(v)
+	buf, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 
 	// Struct fields are marshalled in order of declaration, but we can't easily change the order
 	// OrderedMap fields are always marshalled in order, so we bounce through it
-	o := orderedmap.New()
-	err = o.UnmarshalJSON(jsonToken)
+	orderedMap := orderedmap.New()
+	err = json.Unmarshal(buf, orderedMap)
 	if err != nil {
 		return nil, err
 	}
-	o.Sort(jsonSort)
-	orderedJson, err := json.Marshal(o)
+	orderedMap.Sort(keyOrder)
+	orderedJson, err := json.Marshal(orderedMap)
 	if err != nil {
 		return nil, err
 	}
 
-	b64Token := base64.StdEncoding.EncodeToString(orderedJson)
-	return &b64Token, nil
+	b64Encoded := base64.StdEncoding.EncodeToString(orderedJson)
+	return &b64Encoded, nil
 }
 
 func Decode(b64 string, v interface{}) error {
-	str, err := base64.StdEncoding.DecodeString(b64)
+	buf, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(str, v)
+	err = json.Unmarshal(buf, v)
 	if err != nil {
 		return err
 	}
