@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"github.com/TankerHQ/identity-go/v3/internal/app"
 	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 	"github.com/iancoleman/orderedmap"
@@ -135,7 +136,7 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 }
 
 func checkKeysIntegrity(config config) error {
-	if !bytes.Equal(getAppId(config.AppSecret), config.AppID) {
+	if !bytes.Equal(app.GetAppId(config.AppSecret), config.AppID) {
 		return errors.New("app secret and app ID mismatch")
 	}
 	return nil

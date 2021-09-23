@@ -1,10 +1,12 @@
-package identity
+package identity_test
 
 import (
 	"bytes"
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"github.com/TankerHQ/identity-go/v3"
+	"github.com/TankerHQ/identity-go/v3/internal/app"
 	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"io"
 	"testing"
@@ -21,56 +23,56 @@ func base64id(n int) string {
 }
 
 var (
-	goodAppSecretRaw   = byteArray(AppSecretSize)
+	goodAppSecretRaw   = byteArray(app.AppSecretSize)
 	validAppSecret     = base64.StdEncoding.EncodeToString(goodAppSecretRaw)
 	wrongSizeAppSecret = base64.StdEncoding.EncodeToString(goodAppSecretRaw[2:])
 
-	validAppId     = base64.StdEncoding.EncodeToString(getAppId(goodAppSecretRaw))
-	wrongSizeAppId = base64id(AppPublicKeySize / 2)
+	validAppId     = base64.StdEncoding.EncodeToString(app.GetAppId(goodAppSecretRaw))
+	wrongSizeAppId = base64id(app.AppPublicKeySize / 2)
 
 	notBase64Identity = "some identity"
 
-	validConf = Config{
+	validConf = identity.Config{
 		AppID:     validAppId,
 		AppSecret: validAppSecret,
 	}
 
 	badConfsVector = []struct {
 		desc   string
-		config Config
+		config identity.Config
 	}{
 		{
 			desc: "WrongSizeAppId",
-			config: Config{
+			config: identity.Config{
 				AppID:     wrongSizeAppId,
 				AppSecret: validAppSecret,
 			},
 		},
 		{
 			desc: "WrongSizeAppSecret",
-			config: Config{
+			config: identity.Config{
 				AppID:     validAppId,
 				AppSecret: wrongSizeAppSecret,
 			},
 		},
 		{
 			desc: "NotBase64AppId",
-			config: Config{
+			config: identity.Config{
 				AppID:     "app ID",
 				AppSecret: validAppSecret,
 			},
 		},
 		{
 			desc: "NotBase64AppSecret",
-			config: Config{
+			config: identity.Config{
 				AppID:     validAppId,
 				AppSecret: "app secret",
 			},
 		},
 		{
 			desc: "AppIdSecretMismatch",
-			config: Config{
-				AppID:     base64id(AppPublicKeySize),
+			config: identity.Config{
+				AppID:     base64id(app.AppPublicKeySize),
 				AppSecret: validAppSecret,
 			},
 		},
@@ -85,12 +87,12 @@ var (
 )
 
 func TestCreate(t *testing.T) {
-	conf := Config{
+	conf := identity.Config{
 		AppID:     validAppId,
 		AppSecret: validAppSecret,
 	}
 
-	id, err := Create(conf, "userID")
+	id, err := identity.Create(conf, "userID")
 	if err != nil || id == nil || *id == "" {
 		t.Fatal("error creating identity with valid config")
 	}
@@ -100,7 +102,7 @@ func TestCreate_Error(t *testing.T) {
 
 	for _, conf := range badConfsVector {
 		t.Run(conf.desc, func(t *testing.T) {
-			_, err := Create(conf.config, "userID")
+			_, err := identity.Create(conf.config, "userID")
 			if err == nil {
 				t.Fatal("no error creating identity")
 			}
@@ -114,7 +116,7 @@ func TestCreate_Error(t *testing.T) {
 		}()
 
 		rand.Reader = bytes.NewBuffer(nil)
-		_, err := Create(validConf, "userID")
+		_, err := identity.Create(validConf, "userID")
 		if err == nil {
 			t.Fatal("no error creating identity")
 		}
@@ -124,7 +126,7 @@ func TestCreate_Error(t *testing.T) {
 func TestCreateProvisional(t *testing.T) {
 	for _, validTarget := range validTargets {
 		t.Run("Target/"+validTarget, func(t *testing.T) {
-			id, err := CreateProvisional(validConf, validTarget, "userID")
+			id, err := identity.CreateProvisional(validConf, validTarget, "userID")
 			if err != nil || id == nil || *id == "" {
 				t.Fatal("error creating provisional identity with valid config")
 			}
@@ -151,7 +153,7 @@ func TestCreateProvisional_Error(t *testing.T) {
 	for _, conf := range badConfsVector {
 		for _, target := range validTargets {
 			t.Run(conf.desc+"/"+target, func(t *testing.T) {
-				_, err := CreateProvisional(conf.config, target, "userID")
+				_, err := identity.CreateProvisional(conf.config, target, "userID")
 				if err == nil {
 					t.Fatal("no error creating provisional identity")
 				}
@@ -160,7 +162,7 @@ func TestCreateProvisional_Error(t *testing.T) {
 	}
 
 	t.Run("InvalidTarget", func(t *testing.T) {
-		_, err := CreateProvisional(validConf, invalidTarget, "userID")
+		_, err := identity.CreateProvisional(validConf, invalidTarget, "userID")
 		if err == nil {
 			t.Fatal("no error creating provisional identity")
 		}
@@ -173,7 +175,7 @@ func TestCreateProvisional_Error(t *testing.T) {
 		}()
 
 		rand.Reader = bytes.NewBuffer(nil)
-		_, err := CreateProvisional(validConf, validTargets[0], "userID")
+		_, err := identity.CreateProvisional(validConf, validTargets[0], "userID")
 		if err == nil {
 			t.Fatal("no error creating provisional identity")
 		}
@@ -186,7 +188,7 @@ func TestCreateProvisional_Error(t *testing.T) {
 		}()
 
 		rand.Reader = &singleSuccessReader{r: r, n: 0}
-		_, err := CreateProvisional(validConf, validTargets[0], "userID")
+		_, err := identity.CreateProvisional(validConf, validTargets[0], "userID")
 		if err == nil {
 			t.Fatal("no error creating provisional identity")
 		}
@@ -194,12 +196,12 @@ func TestCreateProvisional_Error(t *testing.T) {
 }
 
 func assertStablePublic(t *testing.T, id *string) {
-	pub, err := GetPublicIdentity(*id)
+	pub, err := identity.GetPublicIdentity(*id)
 	if err != nil {
 		t.Fatal("error getting public identity")
 	}
 
-	pub2, err := GetPublicIdentity(*id)
+	pub2, err := identity.GetPublicIdentity(*id)
 	if err != nil {
 		t.Fatal("error getting public identity")
 	}
@@ -210,7 +212,7 @@ func assertStablePublic(t *testing.T, id *string) {
 }
 
 func TestGetPublicIdentity_Identity(t *testing.T) {
-	id, err := Create(validConf, "userId")
+	id, err := identity.Create(validConf, "userId")
 	if err != nil {
 		panic("err should be nil")
 	}
@@ -220,7 +222,7 @@ func TestGetPublicIdentity_Identity(t *testing.T) {
 
 func TestGetPublicIdentity_ProvisionalIdentity(t *testing.T) {
 	for _, target := range validTargets {
-		provisional, err := CreateProvisional(validConf, target, "userId")
+		provisional, err := identity.CreateProvisional(validConf, target, "userId")
 		if err != nil {
 			panic("error creating provisional identity")
 		}
@@ -242,7 +244,7 @@ func TestGetPublicIdentity_Error(t *testing.T) {
 			panic("error encoding fakeIdentity")
 		}
 
-		_, err = GetPublicIdentity(*fakeIdentityEncoded)
+		_, err = identity.GetPublicIdentity(*fakeIdentityEncoded)
 		if err == nil {
 			t.Fatal("no error getting public identity")
 		}
@@ -258,14 +260,14 @@ func TestGetPublicIdentity_Error(t *testing.T) {
 			panic("error encoding identity")
 		}
 
-		_, err = GetPublicIdentity(*fakeIdentityEncoded)
+		_, err = identity.GetPublicIdentity(*fakeIdentityEncoded)
 		if err == nil {
 			t.Fatal("no error getting public identity")
 		}
 	})
 
 	t.Run("InvalidBase64", func(t *testing.T) {
-		_, err := GetPublicIdentity(notBase64Identity)
+		_, err := identity.GetPublicIdentity(notBase64Identity)
 		if err == nil {
 			t.Fatal("no error getting public identity")
 		}
@@ -274,23 +276,23 @@ func TestGetPublicIdentity_Error(t *testing.T) {
 
 func TestUpgradeIdentity(t *testing.T) {
 	for _, target := range validTargets {
-		prov, err := CreateProvisional(validConf, target, "userId")
+		prov, err := identity.CreateProvisional(validConf, target, "userId")
 		if err != nil {
 			panic("error creating provisional identity")
 		}
-		pubProv, err := GetPublicIdentity(*prov)
+		pubProv, err := identity.GetPublicIdentity(*prov)
 		if err != nil {
 			panic("error getting public identity")
 		}
 
 		t.Run("Private/"+target, func(t *testing.T) {
-			_, err := UpgradeIdentity(*prov)
+			_, err := identity.UpgradeIdentity(*prov)
 			if err != nil {
 				t.Fatal("error upgrading identity")
 			}
 		})
 		t.Run("Public/"+target, func(t *testing.T) {
-			_, err := UpgradeIdentity(*pubProv)
+			_, err := identity.UpgradeIdentity(*pubProv)
 			if err != nil {
 				t.Fatal("error upgrading identity")
 			}
@@ -304,7 +306,7 @@ func TestUpgradeIdentity(t *testing.T) {
 		}
 
 		fakeIdentityEncoded, _ := base64_json.Encode(fakeIdentity)
-		_, err := UpgradeIdentity(*fakeIdentityEncoded)
+		_, err := identity.UpgradeIdentity(*fakeIdentityEncoded)
 		if err != nil {
 			t.Fatal("error upgrading identity")
 		}
@@ -313,7 +315,7 @@ func TestUpgradeIdentity(t *testing.T) {
 
 func TestUpgradeIdentity_Error(t *testing.T) {
 	t.Run("BadBase64", func(t *testing.T) {
-		_, err := UpgradeIdentity(notBase64Identity)
+		_, err := identity.UpgradeIdentity(notBase64Identity)
 		if err == nil {
 			t.Fatal("no error upgrading identity")
 		}
@@ -322,7 +324,7 @@ func TestUpgradeIdentity_Error(t *testing.T) {
 	t.Run("NoTarget", func(t *testing.T) {
 		noTarget := map[string]string{}
 		noTargetEncoded, _ := base64_json.Encode(noTarget)
-		_, err := UpgradeIdentity(*noTargetEncoded)
+		_, err := identity.UpgradeIdentity(*noTargetEncoded)
 		if err == nil {
 			t.Fatal("no error upgrading identity")
 		}
@@ -334,7 +336,7 @@ func TestUpgradeIdentity_Error(t *testing.T) {
 		}
 
 		fakeIdentityEncoded, _ := base64_json.Encode(fakeIdentity)
-		_, err := UpgradeIdentity(*fakeIdentityEncoded)
+		_, err := identity.UpgradeIdentity(*fakeIdentityEncoded)
 		if err == nil {
 			t.Fatal("no error upgrading identity")
 		}
