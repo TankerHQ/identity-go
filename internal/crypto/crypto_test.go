@@ -1,25 +1,26 @@
-package crypto
+package crypto_test
 
 import (
 	"bytes"
 	"crypto/rand"
+	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 	"testing"
 )
 
 func TestNewKeyPair(t *testing.T) {
-	sk1, pk1, err := NewKeyPair()
+	sk1, pk1, err := crypto.NewKeyPair()
 	if err != nil {
 		t.Fatal("error generating key pair")
 	}
-	sk2, pk2, err := NewKeyPair()
+	sk2, pk2, err := crypto.NewKeyPair()
 	if err != nil {
 		t.Fatal("error generating key pair")
 	}
-	sk3, pk3, err := NewKeyPair()
+	sk3, pk3, err := crypto.NewKeyPair()
 	if err != nil {
 		t.Fatal("error generating key pair")
 	}
-	sk4, pk4, err := NewKeyPair()
+	sk4, pk4, err := crypto.NewKeyPair()
 	if err != nil {
 		t.Fatal("error generating key pair")
 	}
@@ -46,7 +47,7 @@ func TestNewKeyPair(t *testing.T) {
 func TestNewKeyPair_Error(t *testing.T) {
 	buf := bytes.NewBuffer(nil)
 	rand.Reader = buf
-	_, _, err := NewKeyPair()
+	_, _, err := crypto.NewKeyPair()
 	if err == nil {
 		t.Fatal("no error generating key pair with invalid rand.Reader")
 	}
