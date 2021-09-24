@@ -21,6 +21,7 @@ type publicIdentity struct {
 
 type identity struct {
 	publicIdentity
+
 	DelegationSignature          []byte `json:"delegation_signature"`
 	EphemeralPublicSignatureKey  []byte `json:"ephemeral_public_signature_key"`
 	EphemeralPrivateSignatureKey []byte `json:"ephemeral_private_signature_key"`
@@ -29,12 +30,14 @@ type identity struct {
 
 type publicProvisionalIdentity struct {
 	publicIdentity
+
 	PublicSignatureKey  []byte `json:"public_signature_key"`
 	PublicEncryptionKey []byte `json:"public_encryption_key"`
 }
 
 type provisionalIdentity struct {
 	publicProvisionalIdentity
+
 	PrivateSignatureKey  []byte `json:"private_signature_key"`
 	PrivateEncryptionKey []byte `json:"private_encryption_key"`
 }
@@ -71,6 +74,7 @@ func CreateProvisional(config Config, target string, value string) (*string, err
 func GetPublicIdentity(b64Identity string) (*string, error) {
 	type anyPublicIdentity struct {
 		publicIdentity
+
 		PublicSignatureKey  []byte `json:"public_signature_key,omitempty"`
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
