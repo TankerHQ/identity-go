@@ -86,6 +86,21 @@ var (
 	invalidTarget = "____not_a_good_target____"
 )
 
+// singleSuccessReader is a helper type to test the case when the first
+// rand.Read succeeds but not the second
+type singleSuccessReader struct {
+	r io.Reader
+	n int
+}
+
+func (s *singleSuccessReader) Read(p []byte) (int, error) {
+	if s.n == 1 {
+		return 0, errors.New("no more to read")
+	}
+	s.n++
+	return s.r.Read(p)
+}
+
 func TestCreate(t *testing.T) {
 	conf := identity.Config{
 		AppID:     validAppId,
@@ -121,6 +136,22 @@ func TestCreate_Error(t *testing.T) {
 			t.Fatal("no error creating identity")
 		}
 	})
+
+	t.Run("DisruptedRandReader", func(t *testing.T) {
+		defer func() {
+			if err := recover() ; err == nil {
+				t.Fatal("no panic creating identity")
+			}
+		}()
+
+		r := rand.Reader
+		defer func() {
+			rand.Reader = r
+		}()
+
+		rand.Reader = &singleSuccessReader{r: r, n: 0}
+		identity.Create(validConf, "userID")
+	})
 }
 
 func TestCreateProvisional(t *testing.T) {
@@ -132,21 +163,6 @@ func TestCreateProvisional(t *testing.T) {
 			}
 		})
 	}
-}
-
-// singleSuccessReader is a helper type to test the case when the first
-// rand.Read succeeds but not the second
-type singleSuccessReader struct {
-	r io.Reader
-	n int
-}
-
-func (s *singleSuccessReader) Read(p []byte) (int, error) {
-	if s.n == 1 {
-		return 0, errors.New("no more to read")
-	}
-	s.n++
-	return s.r.Read(p)
 }
 
 func TestCreateProvisional_Error(t *testing.T) {
