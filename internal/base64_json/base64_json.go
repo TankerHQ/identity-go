@@ -6,20 +6,23 @@ import (
 	"github.com/iancoleman/orderedmap"
 )
 
-func keyOrder(p1, p2 *orderedmap.Pair) bool {
-	keyIndexes := map[string]int{
-		"trustchain_id": 1,
-		"target": 2,
-		"value": 3,
-		"delegation_signature": 4,
-		"ephemeral_public_signature_key": 5,
+var (
+	keyIndexes = map[string]int{
+		"trustchain_id":                   1,
+		"target":                          2,
+		"value":                           3,
+		"delegation_signature":            4,
+		"ephemeral_public_signature_key":  5,
 		"ephemeral_private_signature_key": 6,
-		"user_secret": 7,
-		"public_encryption_key": 8,
-		"private_encryption_key": 9,
-		"public_signature_key": 10,
-		"private_signature_key": 11,
+		"user_secret":                     7,
+		"public_encryption_key":           8,
+		"private_encryption_key":          9,
+		"public_signature_key":            10,
+		"private_signature_key":           11,
 	}
+)
+
+func keyOrder(p1, p2 *orderedmap.Pair) bool {
 	return keyIndexes[p1.Key()] < keyIndexes[p2.Key()]
 }
 

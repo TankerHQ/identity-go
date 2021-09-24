@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/base64"
 	"errors"
+	"github.com/TankerHQ/identity-go/v3/internal/app"
 	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 	"github.com/iancoleman/orderedmap"
@@ -37,7 +38,6 @@ type provisionalIdentity struct {
 	PrivateSignatureKey  []byte `json:"private_signature_key"`
 	PrivateEncryptionKey []byte `json:"private_encryption_key"`
 }
-
 
 func Create(config Config, userID string) (*string, error) {
 	conf, err := config.fromBase64()
@@ -76,7 +76,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	}
 
 	publicIdentity := &anyPublicIdentity{}
-	if err := base64_json.Decode(b64Identity, publicIdentity) ; err != nil {
+	if err := base64_json.Decode(b64Identity, publicIdentity); err != nil {
 		return nil, err
 	}
 
@@ -91,7 +91,10 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
 		} else {
 			privateIdentity := orderedmap.New()
-			if err := base64_json.Decode(b64Identity, &privateIdentity) ; err != nil {
+			// in practice this case should never happen since we are decoding into a
+			// more permissive type, and we already decoded above so there should be
+			// no problem with b64Identity itself
+			if err := base64_json.Decode(b64Identity, &privateIdentity); err != nil {
 				return nil, err
 			}
 			privateSignatureKey, found := privateIdentity.Get("private_signature_key")
@@ -108,7 +111,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 func UpgradeIdentity(b64Identity string) (*string, error) {
 	identity := orderedmap.New()
-	if err := base64_json.Decode(b64Identity, &identity) ; err != nil {
+	if err := base64_json.Decode(b64Identity, &identity); err != nil {
 		return nil, err
 	}
 
@@ -132,10 +135,16 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 	return base64_json.Encode(identity)
 }
 
+func checkKeysIntegrity(config config) error {
+	if !bytes.Equal(app.GetAppId(config.AppSecret), config.AppID) {
+		return errors.New("app secret and app ID mismatch")
+	}
+	return nil
+}
 
 func generateIdentity(config config, userIDString string) (*identity, error) {
-	if !bytes.Equal(getAppId(config.AppSecret), config.AppID) {
-		return nil, errors.New("app secret and app ID mismatch")
+	if err := checkKeysIntegrity(config); err != nil {
+		return nil, err
 	}
 
 	userID := hashUserID(config.AppID, userIDString)
@@ -163,6 +172,10 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 }
 
 func generateProvisionalIdentity(config config, target string, value string) (*provisionalIdentity, error) {
+	if err := checkKeysIntegrity(config); err != nil {
+		return nil, err
+	}
+
 	publicSignatureKey, privateSignatureKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
 		return nil, err
