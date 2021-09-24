@@ -5,7 +5,9 @@ import (
 )
 
 const (
+	// AppSecretSize is the length of an app secret, in bytes
 	AppSecretSize = 64
+	// AppPublicKeySize is the length of an app public key, in bytes
 	AppPublicKeySize = 32
 )
 
@@ -14,6 +16,8 @@ const (
 	appCreationNature = 1
 )
 
+// GetAppId returns the app ID from the provided appSecret.
+// appSecret should be precisely AppSecretSize bytes long.
 func GetAppId(appSecret []byte) []byte {
 	publicKey := appSecret[AppSecretSize-AppPublicKeySize : AppSecretSize]
 
