@@ -91,18 +91,20 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	case "email":
 		publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
 	case "phone_number":
-		privateIdentity := make(map[string]interface{})
+		privateIdentity := struct {
+			PrivateSignatureKey *string `json:"private_signature_key"`
+		}{}
 		// in practice this case should never happen since we are decoding into a
 		// more permissive type, and we already decoded above so there should be
 		// no problem with b64Identity itself
 		if err := base64_json.Decode(b64Identity, &privateIdentity); err != nil {
 			return nil, err
 		}
-		privateSignatureKey, found := privateIdentity["private_signature_key"]
-		if !found {
+		privateSignatureKey := privateIdentity.PrivateSignatureKey
+		if privateSignatureKey == nil {
 			return nil, errors.New("invalid tanker identity")
 		}
-		publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, privateSignatureKey.(string))
+		publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, *privateSignatureKey)
 	default:
 		return nil, errors.New("unsupported identity target")
 	}
