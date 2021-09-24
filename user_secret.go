@@ -22,10 +22,10 @@ func newUserSecret(userID []byte) []byte {
 }
 
 func oneByteGenericHash(input []byte) byte {
-	hash, err := blake2b.New(16, []byte{})
+	hash, err := blake2b.New(16, nil)
 	if err != nil {
 		panic("hash failed: " + err.Error())
 	}
-	_, _ = hash.Write(input)
-	return hash.Sum([]byte{})[0]
+	hash.Write(input)
+	return hash.Sum(nil)[0]
 }
