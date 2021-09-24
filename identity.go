@@ -79,34 +79,35 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		PublicEncryptionKey []byte `json:"public_encryption_key,omitempty"`
 	}
 
-	publicIdentity := &anyPublicIdentity{}
+	publicIdentity := new(anyPublicIdentity)
 	if err := base64_json.Decode(b64Identity, publicIdentity); err != nil {
 		return nil, err
 	}
 
-	if publicIdentity.Target != "user" &&
-		publicIdentity.Target != "email" &&
-		publicIdentity.Target != "phone_number" {
+	hashTarget := true
+	switch publicIdentity.Target {
+	case "user":
+		hashTarget = false
+	case "email":
+		publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
+	case "phone_number":
+		privateIdentity := make(map[string]interface{})
+		// in practice this case should never happen since we are decoding into a
+		// more permissive type, and we already decoded above so there should be
+		// no problem with b64Identity itself
+		if err := base64_json.Decode(b64Identity, &privateIdentity); err != nil {
+			return nil, err
+		}
+		privateSignatureKey, found := privateIdentity["private_signature_key"]
+		if !found {
+			return nil, errors.New("invalid tanker identity")
+		}
+		publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, privateSignatureKey.(string))
+	default:
 		return nil, errors.New("unsupported identity target")
 	}
 
-	if publicIdentity.Target != "user" {
-		if publicIdentity.Target == "email" {
-			publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
-		} else {
-			privateIdentity := orderedmap.New()
-			// in practice this case should never happen since we are decoding into a
-			// more permissive type, and we already decoded above so there should be
-			// no problem with b64Identity itself
-			if err := base64_json.Decode(b64Identity, &privateIdentity); err != nil {
-				return nil, err
-			}
-			privateSignatureKey, found := privateIdentity.Get("private_signature_key")
-			if !found {
-				return nil, errors.New("invalid tanker identity")
-			}
-			publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, privateSignatureKey.(string))
-		}
+	if hashTarget {
 		publicIdentity.Target = "hashed_" + publicIdentity.Target
 	}
 
