@@ -26,6 +26,12 @@ func keyOrder(p1, p2 *orderedmap.Pair) bool {
 	return keyIndexes[p1.Key()] < keyIndexes[p2.Key()]
 }
 
+// Encode returns a pointer to the base64 representation of the result of
+// marshalling v. If an error occurs in the process, it is returned.
+// Under the hood, Encode transforms v into a *orderedmap.OrderedMap so
+// the result will always wrap a key-sorted JSON representation to this
+// package. If v's underlying type is already *orderedmap.OrderedMap, v's
+// wrapped value will be used as is.
 func Encode(v interface{}) (*string, error) {
 	// Note: []byte values are encoded as base64-encoded strings
 	//       (see: https://golang.org/pkg/encoding/json/#Marshal)
@@ -51,6 +57,10 @@ func Encode(v interface{}) (*string, error) {
 	return &b64Encoded, nil
 }
 
+// Decode takes a value typically returned by Encode, that is,
+// a base64-encoded JSON-marshalled value, and applies the reverse operation,
+// first base64-decoding b64, then unmarshalling the resulting JSON
+// representation into v. If an error occurs on the way, it is returned.
 func Decode(b64 string, v interface{}) error {
 	buf, err := base64.StdEncoding.DecodeString(b64)
 	if err != nil {
