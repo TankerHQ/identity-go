@@ -7,8 +7,8 @@ import (
 )
 
 type benchStruct struct {
-	PublicSignatureKey string `json:"public_signature_key"`
-	PublicEncryptionKey string `json:"public_encryption_key"`
+	PublicSignatureKey   string `json:"public_signature_key"`
+	PublicEncryptionKey  string `json:"public_encryption_key"`
 	PrivateEncryptionKey string `json:"private_encryption_key"`
 }
 
@@ -20,8 +20,8 @@ var (
 	}
 
 	benchMap = map[string]string{
-		"public_signature_key": "str",
-		"public_encryption_key": "str",
+		"public_signature_key":   "str",
+		"public_encryption_key":  "str",
 		"private_encryption_key": "str",
 	}
 
@@ -33,7 +33,7 @@ var (
 		return ordered
 	}()
 
-	benchVecs = []struct{
+	benchVecs = []struct {
 		desc string
 		data interface{}
 	}{
@@ -55,7 +55,7 @@ var (
 func BenchmarkEncode(b *testing.B) {
 	for _, vec := range benchVecs {
 		b.Run(vec.desc, func(b *testing.B) {
-			for i := 0 ; i < b.N ; i++ {
+			for i := 0; i < b.N; i++ {
 				base64_json.Encode(vec.data)
 			}
 		})
@@ -65,7 +65,7 @@ func BenchmarkEncode(b *testing.B) {
 func BenchmarkDecode(b *testing.B) {
 	encoded, _ := base64_json.Encode(benchStructValue)
 	into := make(map[string]interface{})
-	for i := 0 ; i < b.N ; i++ {
+	for i := 0; i < b.N; i++ {
 		base64_json.Decode(encoded, &into)
 	}
 }

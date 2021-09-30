@@ -5,9 +5,9 @@ package identity
 type Target string
 
 const (
-	Email Target = "email"
+	Email       Target = "email"
 	PhoneNumber Target = "phone_number"
-	User Target = "user"
+	User        Target = "user"
 )
 
 // Hashed returns the hashed equivalent of t

@@ -6,7 +6,7 @@ import (
 )
 
 func BenchmarkCreate(b *testing.B) {
-	for i := 0 ; i < b.N ; i++ {
+	for i := 0; i < b.N; i++ {
 		identity.New(validConf, "userID")
 	}
 }
@@ -34,7 +34,7 @@ func BenchmarkGetPublicIdentity(b *testing.B) {
 
 func BenchmarkUpgradeIdentity(b *testing.B) {
 	ident, _ := identity.New(validConf, "userID")
-	for i := 0 ; i < b.N ; i++ {
+	for i := 0; i < b.N; i++ {
 		identity.UpgradeIdentity(ident)
 	}
 }

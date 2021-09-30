@@ -139,7 +139,7 @@ func TestCreate_Error(t *testing.T) {
 
 	t.Run("DisruptedRandReader", func(t *testing.T) {
 		defer func() {
-			if err := recover() ; err == nil {
+			if err := recover(); err == nil {
 				t.Fatal("no panic creating identity")
 			}
 		}()

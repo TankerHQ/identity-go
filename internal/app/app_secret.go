@@ -12,7 +12,7 @@ const (
 )
 
 const (
-	authorSize = 32
+	authorSize        = 32
 	appCreationNature = 1
 )
 
@@ -21,9 +21,9 @@ const (
 func GetAppId(appSecret []byte) []byte {
 	publicKey := appSecret[AppSecretSize-AppPublicKeySize : AppSecretSize]
 
-	payload := make([]byte, 1 +authorSize+AppPublicKeySize)
+	payload := make([]byte, 1+authorSize+AppPublicKeySize)
 	payload[0] = appCreationNature
-	copy(payload[1 +authorSize:], publicKey)
+	copy(payload[1+authorSize:], publicKey)
 
 	hashed := blake2b.Sum256(payload)
 	return hashed[:]
