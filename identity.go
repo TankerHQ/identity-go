@@ -42,6 +42,7 @@ type provisionalIdentity struct {
 	PrivateEncryptionKey []byte `json:"private_encryption_key"`
 }
 
+// Create returns a new identity crafted from config and userID
 func Create(config Config, userID string) (*string, error) {
 	conf, err := config.fromBase64()
 	if err != nil {
@@ -54,6 +55,8 @@ func Create(config Config, userID string) (*string, error) {
 	return base64_json.Encode(identity)
 }
 
+// CreateProvisional returns a new provisional identity crafted from
+// config, target and value
 func CreateProvisional(config Config, target string, value string) (*string, error) {
 	conf, err := config.fromBase64()
 	if err != nil {
@@ -71,6 +74,8 @@ func CreateProvisional(config Config, target string, value string) (*string, err
 	return base64_json.Encode(provisional)
 }
 
+// GetPublicIdentity returns the public identity associated with the
+// identity it is sent
 func GetPublicIdentity(b64Identity string) (*string, error) {
 	type anyPublicIdentity struct {
 		publicIdentity
@@ -114,6 +119,8 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	return base64_json.Encode(publicIdentity)
 }
 
+// UpgradeIdentity upgrades the identity provided to it if needed and returns
+// the result of the upgrade
 func UpgradeIdentity(b64Identity string) (*string, error) {
 	identity := orderedmap.New()
 	if err := base64_json.Decode(b64Identity, &identity); err != nil {
