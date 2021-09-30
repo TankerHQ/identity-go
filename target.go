@@ -1,6 +1,6 @@
 package identity
 
-// Target is the target for an identity. It can take values among
+// Target is the target for an Identity. It can take values among
 // "email", "phone_number" and "user"
 type Target string
 

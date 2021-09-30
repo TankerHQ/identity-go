@@ -120,7 +120,7 @@ func TestEncodeDecode(t *testing.T) {
 			}
 
 			ordered := orderedmap.New()
-			err = base64_json.Decode(*buf, &ordered)
+			err = base64_json.Decode(buf, &ordered)
 			if err != nil {
 				t.Fatal(vec.desc, "decode failed")
 			}
