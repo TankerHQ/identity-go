@@ -35,33 +35,29 @@ func keySort(keys []string) {
 // the result will always wrap a key-sorted JSON representation. If v's
 // underlying type is already *orderedmap.OrderedMap, v's wrapped value
 // will be used as is.
-func Encode(v interface{}) (*string, error) {
-	orderedMap, isOrderedMap := v.(*orderedmap.OrderedMap)
+func Encode(v interface{}) (string, error) {
+	// Note: []byte values are encoded as base64-encoded strings
+	//       (see: https://golang.org/pkg/encoding/json/#Marshal)
+	buf, err := json.Marshal(v)
+	if err != nil {
+		return "", err
+	}
 
-	if !isOrderedMap {
-		// Note: []byte values are encoded as base64-encoded strings
-		//       (see: https://golang.org/pkg/encoding/json/#Marshal)
-		buf, err := json.Marshal(v)
-		if err != nil {
-			return nil, err
-		}
-
-		// Struct fields are marshalled in order of declaration, but we can't easily change the order
-		// OrderedMap fields are always marshalled in order, so we bounce through it
-		orderedMap = orderedmap.New()
-		err = json.Unmarshal(buf, orderedMap)
-		if err != nil {
-			return nil, err
-		}
+	// Struct fields are marshalled in order of declaration, but we can't easily change the order
+	// OrderedMap fields are always marshalled in order, so we bounce through it
+	orderedMap := orderedmap.New()
+	err = json.Unmarshal(buf, orderedMap)
+	if err != nil {
+		return "", err
 	}
 	orderedMap.SortKeys(keySort)
 	orderedJson, err := json.Marshal(orderedMap)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	b64Encoded := base64.StdEncoding.EncodeToString(orderedJson)
-	return &b64Encoded, nil
+	return b64Encoded, nil
 }
 
 // Decode takes a value typically returned by Encode, that is,

@@ -66,6 +66,6 @@ func BenchmarkDecode(b *testing.B) {
 	encoded, _ := base64_json.Encode(benchStructValue)
 	into := make(map[string]interface{})
 	for i := 0 ; i < b.N ; i++ {
-		base64_json.Decode(*encoded, &into)
+		base64_json.Decode(encoded, &into)
 	}
 }

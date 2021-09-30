@@ -42,41 +42,41 @@ type provisionalIdentity struct {
 	PrivateEncryptionKey []byte `json:"private_encryption_key"`
 }
 
-// Create returns a new identity crafted from config and userID
-func Create(config Config, userID string) (*string, error) {
+// New returns a new identity crafted from config and userID
+func New(config Config, userID string) (string, error) {
 	conf, err := config.fromBase64()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	identity, err := generateIdentity(*conf, userID)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return base64_json.Encode(identity)
 }
 
-// CreateProvisional returns a new provisional identity crafted from
+// NewProvisional returns a new provisional identity crafted from
 // config, target and value
-func CreateProvisional(config Config, target string, value string) (*string, error) {
+func NewProvisional(config Config, target string, value string) (string, error) {
 	conf, err := config.fromBase64()
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
 	if target != "email" && target != "phone_number" {
-		return nil, errors.New("unsupported provisional identity target")
+		return "", errors.New("unsupported provisional identity target")
 	}
 
 	provisional, err := generateProvisionalIdentity(*conf, target, value)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return base64_json.Encode(provisional)
 }
 
 // GetPublicIdentity returns the public identity associated with the
 // provided identity
-func GetPublicIdentity(b64Identity string) (*string, error) {
+func GetPublicIdentity(b64Identity string) (string, error) {
 	type anyPublicIdentity struct {
 		publicIdentity
 
@@ -86,7 +86,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 	publicIdentity := new(anyPublicIdentity)
 	if err := base64_json.Decode(b64Identity, publicIdentity); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	hashTarget := true
@@ -103,15 +103,15 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		// more permissive type, and we already decoded above so there should be
 		// no problem with b64Identity itself
 		if err := base64_json.Decode(b64Identity, &privateIdentity); err != nil {
-			return nil, err
+			return "", err
 		}
 		privateSignatureKey := privateIdentity.PrivateSignatureKey
 		if privateSignatureKey == nil {
-			return nil, errors.New("invalid tanker identity")
+			return "", errors.New("invalid tanker identity")
 		}
 		publicIdentity.Value = hashProvisionalIdentityValue(publicIdentity.Value, *privateSignatureKey)
 	default:
-		return nil, errors.New("unsupported identity target")
+		return "", errors.New("unsupported identity target")
 	}
 
 	if hashTarget {
@@ -123,23 +123,23 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 // UpgradeIdentity upgrades the provided identity if needed and returns
 // the result of the upgrade
-func UpgradeIdentity(b64Identity string) (*string, error) {
+func UpgradeIdentity(b64Identity string) (string, error) {
 	identity := orderedmap.New()
 	if err := base64_json.Decode(b64Identity, &identity); err != nil {
-		return nil, err
+		return "", err
 	}
 
 	_, isPrivate := identity.Get("private_encryption_key")
 	target, found := identity.Get("target")
 	if !found {
-		return nil, errors.New("invalid provisional identity (missing target field)")
+		return "", errors.New("invalid provisional identity (missing target field)")
 	}
 
 	if target == "email" && !isPrivate {
 		identity.Set("target", "hashed_email")
 		value, valueFound := identity.Get("value")
 		if !valueFound {
-			return nil, errors.New("unsupported identity without value")
+			return "", errors.New("unsupported identity without value")
 		}
 
 		hashedEmail := blake2b.Sum256([]byte(value.(string)))
@@ -156,21 +156,22 @@ func checkKeysIntegrity(config config) error {
 	return nil
 }
 
-func generateIdentity(config config, userIDString string) (*identity, error) {
+func generateIdentity(config config, userIDString string) (identity, error) {
+	var ident identity
 	if err := checkKeysIntegrity(config); err != nil {
-		return nil, err
+		return ident, err
 	}
 
 	userID := hashUserID(config.AppID, userIDString)
 	epubSignKey, eprivSignKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
-		return nil, err
+		return ident, err
 	}
 
 	payload := append(epubSignKey, userID...)
 	delegationSignature := ed25519.Sign(config.AppSecret, payload)
 
-	identity := identity{
+	ident = identity{
 		publicIdentity: publicIdentity{
 			TrustchainID: config.AppID,
 			Target:       "user",
@@ -182,24 +183,25 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 		UserSecret:                   newUserSecret(userID),
 	}
 
-	return &identity, nil
+	return ident, nil
 }
 
-func generateProvisionalIdentity(config config, target string, value string) (*provisionalIdentity, error) {
+func generateProvisionalIdentity(config config, target string, value string) (provisionalIdentity, error) {
+	var provIdentity provisionalIdentity
 	if err := checkKeysIntegrity(config); err != nil {
-		return nil, err
+		return provIdentity, err
 	}
 
 	publicSignatureKey, privateSignatureKey, err := ed25519.GenerateKey(nil)
 	if err != nil {
-		return nil, err
+		return provIdentity, err
 	}
 	publicEncryptionKey, privateEncryptionKey, err := crypto.NewKeyPair()
 	if err != nil {
-		return nil, err
+		return provIdentity, err
 	}
 
-	provisionalIdentity := provisionalIdentity{
+	provIdentity = provisionalIdentity{
 		publicProvisionalIdentity: publicProvisionalIdentity{
 			publicIdentity: publicIdentity{
 				TrustchainID: config.AppID,
@@ -213,7 +215,7 @@ func generateProvisionalIdentity(config config, target string, value string) (*p
 		PrivateEncryptionKey: privateEncryptionKey,
 	}
 
-	return &provisionalIdentity, nil
+	return provIdentity, nil
 }
 
 func hashProvisionalIdentityEmail(email string) (hash string) {
