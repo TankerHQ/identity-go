@@ -6,8 +6,11 @@ import (
 	"github.com/TankerHQ/identity-go/v3/internal/app"
 )
 
+// Config wraps information about an app
 type Config struct {
+	// AppID is the ID of the app corresponding to this config
 	AppID     string
+	// AppSecret is the app private signature key used to sign identities
 	AppSecret string
 }
 
