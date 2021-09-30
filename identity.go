@@ -15,7 +15,7 @@ import (
 
 type publicIdentity struct {
 	TrustchainID []byte `json:"trustchain_id"`
-	Target       string `json:"target"`
+	Target       Target `json:"target"`
 	Value        string `json:"value"`
 }
 
@@ -57,7 +57,7 @@ func Create(config Config, userID string) (*string, error) {
 
 // CreateProvisional returns a new provisional identity crafted from
 // config, target and value
-func CreateProvisional(config Config, target string, value string) (*string, error) {
+func CreateProvisional(config Config, target Target, value string) (*string, error) {
 	conf, err := config.fromBase64()
 	if err != nil {
 		return nil, err
@@ -91,11 +91,11 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 
 	hashTarget := true
 	switch publicIdentity.Target {
-	case "user":
+	case User:
 		hashTarget = false
-	case "email":
+	case Email:
 		publicIdentity.Value = hashProvisionalIdentityEmail(publicIdentity.Value)
-	case "phone_number":
+	case PhoneNumber:
 		privateIdentity := make(map[string]interface{})
 		// in practice this case should never happen since we are decoding into a
 		// more permissive type, and we already decoded above so there should be
@@ -113,7 +113,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	}
 
 	if hashTarget {
-		publicIdentity.Target = "hashed_" + publicIdentity.Target
+		publicIdentity.Target = publicIdentity.Target.Hashed()
 	}
 
 	return base64_json.Encode(publicIdentity)
@@ -133,8 +133,8 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 		return nil, errors.New("invalid provisional identity (missing target field)")
 	}
 
-	if target == "email" && !isPrivate {
-		identity.Set("target", "hashed_email")
+	if Target(target.(string)) == Email && !isPrivate {
+		identity.Set("target", Email.Hashed())
 		value, valueFound := identity.Get("value")
 		if !valueFound {
 			return nil, errors.New("unsupported identity without value")
@@ -171,7 +171,7 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 	identity := identity{
 		publicIdentity: publicIdentity{
 			TrustchainID: config.AppID,
-			Target:       "user",
+			Target:       User,
 			Value:        base64.StdEncoding.EncodeToString(userID),
 		},
 		DelegationSignature:          delegationSignature,
@@ -183,7 +183,7 @@ func generateIdentity(config config, userIDString string) (*identity, error) {
 	return &identity, nil
 }
 
-func generateProvisionalIdentity(config config, target string, value string) (*provisionalIdentity, error) {
+func generateProvisionalIdentity(config config, target Target, value string) (*provisionalIdentity, error) {
 	if err := checkKeysIntegrity(config); err != nil {
 		return nil, err
 	}

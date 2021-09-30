@@ -78,12 +78,12 @@ var (
 		},
 	}
 
-	validTargets = []string{
-		"email",
-		"phone_number",
+	validTargets = []identity.Target{
+		identity.Email,
+		identity.PhoneNumber,
 	}
 
-	invalidTarget = "____not_a_good_target____"
+	invalidTarget = identity.Target("____not_a_good_target____")
 )
 
 // singleSuccessReader is a helper type to test the case when the first
@@ -156,7 +156,7 @@ func TestCreate_Error(t *testing.T) {
 
 func TestCreateProvisional(t *testing.T) {
 	for _, validTarget := range validTargets {
-		t.Run("Target/"+validTarget, func(t *testing.T) {
+		t.Run("Target/"+string(validTarget), func(t *testing.T) {
 			id, err := identity.CreateProvisional(validConf, validTarget, "userID")
 			if err != nil || id == nil || *id == "" {
 				t.Fatal("error creating provisional identity with valid config")
@@ -168,7 +168,7 @@ func TestCreateProvisional(t *testing.T) {
 func TestCreateProvisional_Error(t *testing.T) {
 	for _, conf := range badConfsVector {
 		for _, target := range validTargets {
-			t.Run(conf.desc+"/"+target, func(t *testing.T) {
+			t.Run(conf.desc+"/"+string(target), func(t *testing.T) {
 				_, err := identity.CreateProvisional(conf.config, target, "userID")
 				if err == nil {
 					t.Fatal("no error creating provisional identity")
@@ -243,7 +243,7 @@ func TestGetPublicIdentity_ProvisionalIdentity(t *testing.T) {
 			panic("error creating provisional identity")
 		}
 
-		t.Run(target, func(t *testing.T) {
+		t.Run(string(target), func(t *testing.T) {
 			assertStablePublic(t, provisional)
 		})
 	}
@@ -251,7 +251,7 @@ func TestGetPublicIdentity_ProvisionalIdentity(t *testing.T) {
 
 func TestGetPublicIdentity_Error(t *testing.T) {
 	t.Run("BadTarget", func(t *testing.T) {
-		fakeIdentity := map[string]string{
+		fakeIdentity := map[string]identity.Target{
 			"target": invalidTarget,
 		}
 
@@ -301,13 +301,13 @@ func TestUpgradeIdentity(t *testing.T) {
 			panic("error getting public identity")
 		}
 
-		t.Run("Private/"+target, func(t *testing.T) {
+		t.Run("Private/"+string(target), func(t *testing.T) {
 			_, err := identity.UpgradeIdentity(*prov)
 			if err != nil {
 				t.Fatal("error upgrading identity")
 			}
 		})
-		t.Run("Public/"+target, func(t *testing.T) {
+		t.Run("Public/"+string(target), func(t *testing.T) {
 			_, err := identity.UpgradeIdentity(*pubProv)
 			if err != nil {
 				t.Fatal("error upgrading identity")

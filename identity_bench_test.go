@@ -13,7 +13,7 @@ func BenchmarkCreate(b *testing.B) {
 
 func BenchmarkCreateProvisional(b *testing.B) {
 	for _, target := range validTargets {
-		b.Run(target, func(b *testing.B) {
+		b.Run(string(target), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				identity.CreateProvisional(validConf, target, "userID")
 			}
@@ -24,7 +24,7 @@ func BenchmarkCreateProvisional(b *testing.B) {
 func BenchmarkGetPublicIdentity(b *testing.B) {
 	for _, target := range validTargets {
 		provIdentity, _ := identity.CreateProvisional(validConf, target, "userID")
-		b.Run(target, func(b *testing.B) {
+		b.Run(string(target), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				identity.GetPublicIdentity(*provIdentity)
 			}
