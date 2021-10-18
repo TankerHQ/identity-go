@@ -4,10 +4,15 @@ import (
 	"golang.org/x/crypto/blake2b"
 )
 
-const AppSecretSize = 64
-const AppPublicKeySize = 32
-const authorSize = 32
-const appCreationNature = 1
+const (
+	AppSecretSize = 64
+	AppPublicKeySize = 32
+)
+
+const (
+	authorSize = 32
+	appCreationNature = 1
+)
 
 func GetAppId(appSecret []byte) []byte {
 	publicKey := appSecret[AppSecretSize-AppPublicKeySize : AppSecretSize]
