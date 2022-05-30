@@ -6,7 +6,7 @@ import (
 )
 
 func BenchmarkNewKeyPair(b *testing.B) {
-	for i := 0 ; i < b.N ; i++ {
+	for i := 0; i < b.N; i++ {
 		crypto.NewKeyPair()
 	}
 }
