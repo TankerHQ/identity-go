@@ -9,7 +9,7 @@ import (
 // Config wraps information about an app
 type Config struct {
 	// AppID is the ID of the app corresponding to this config
-	AppID     string
+	AppID string
 	// AppSecret is a secret used to create identities
 	AppSecret string
 }
