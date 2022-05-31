@@ -2,15 +2,15 @@ package identity
 
 import (
 	"bytes"
+	"crypto/ed25519"
 	"encoding/base64"
 	"errors"
+
 	"github.com/TankerHQ/identity-go/v3/internal/app"
 	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 	"github.com/iancoleman/orderedmap"
 	"golang.org/x/crypto/blake2b"
-
-	"crypto/ed25519"
 )
 
 type publicIdentity struct {

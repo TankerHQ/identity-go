@@ -3,8 +3,9 @@ package app_test
 import (
 	"bytes"
 	"crypto/rand"
-	"github.com/TankerHQ/identity-go/v3/internal/app"
 	"testing"
+
+	"github.com/TankerHQ/identity-go/v3/internal/app"
 )
 
 func TestGetAppId(t *testing.T) {

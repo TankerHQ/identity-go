@@ -3,8 +3,9 @@ package crypto_test
 import (
 	"bytes"
 	"crypto/rand"
-	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 	"testing"
+
+	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 )
 
 func TestNewKeyPair(t *testing.T) {

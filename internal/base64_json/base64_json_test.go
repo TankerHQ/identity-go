@@ -3,9 +3,10 @@ package base64_json_test
 import (
 	"errors"
 	"fmt"
+	"testing"
+
 	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"github.com/iancoleman/orderedmap"
-	"testing"
 )
 
 // should sort last

@@ -1,8 +1,9 @@
 package identity_test
 
 import (
-	"github.com/TankerHQ/identity-go/v3"
 	"testing"
+
+	"github.com/TankerHQ/identity-go/v3"
 )
 
 func BenchmarkCreate(b *testing.B) {
