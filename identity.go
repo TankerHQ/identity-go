@@ -10,7 +10,7 @@ import (
 	"github.com/iancoleman/orderedmap"
 	"golang.org/x/crypto/blake2b"
 
-	"golang.org/x/crypto/ed25519"
+	"crypto/ed25519"
 )
 
 type publicIdentity struct {

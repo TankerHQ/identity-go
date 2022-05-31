@@ -1,7 +1,7 @@
 package app
 
 import (
-	"golang.org/x/crypto/ed25519"
+	"crypto/ed25519"
 	"testing"
 )
 
