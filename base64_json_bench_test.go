@@ -1,9 +1,9 @@
-package base64_json_test
+package identity_test
 
 import (
+	"github.com/TankerHQ/identity-go/v3"
 	"testing"
 
-	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"github.com/iancoleman/orderedmap"
 )
 
@@ -57,16 +57,16 @@ func BenchmarkEncode(b *testing.B) {
 	for _, vec := range benchVecs {
 		b.Run(vec.desc, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				base64_json.Encode(vec.data)
+				identity.Encode(vec.data)
 			}
 		})
 	}
 }
 
 func BenchmarkDecode(b *testing.B) {
-	encoded, _ := base64_json.Encode(benchStructValue)
+	encoded, _ := identity.Encode(benchStructValue)
 	into := make(map[string]interface{})
 	for i := 0; i < b.N; i++ {
-		base64_json.Decode(*encoded, &into)
+		identity.Decode(*encoded, &into)
 	}
 }

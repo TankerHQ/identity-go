@@ -10,7 +10,6 @@ import (
 
 	"github.com/TankerHQ/identity-go/v3"
 	"github.com/TankerHQ/identity-go/v3/internal/app"
-	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 )
 
 func byteArray(n int) []byte {
@@ -256,7 +255,7 @@ func TestGetPublicIdentity_Error(t *testing.T) {
 			"target": invalidTarget,
 		}
 
-		fakeIdentityEncoded, err := base64_json.Encode(fakeIdentity)
+		fakeIdentityEncoded, err := identity.Encode(fakeIdentity)
 		if err != nil {
 			panic("error encoding fakeIdentity")
 		}
@@ -272,7 +271,7 @@ func TestGetPublicIdentity_Error(t *testing.T) {
 			"target": "phone_number",
 		}
 
-		fakeIdentityEncoded, err := base64_json.Encode(fakeIdentity)
+		fakeIdentityEncoded, err := identity.Encode(fakeIdentity)
 		if err != nil {
 			panic("error encoding identity")
 		}
@@ -322,7 +321,7 @@ func TestUpgradeIdentity(t *testing.T) {
 			"value":  "value",
 		}
 
-		fakeIdentityEncoded, _ := base64_json.Encode(fakeIdentity)
+		fakeIdentityEncoded, _ := identity.Encode(fakeIdentity)
 		_, err := identity.UpgradeIdentity(*fakeIdentityEncoded)
 		if err != nil {
 			t.Fatal("error upgrading identity")
@@ -340,7 +339,7 @@ func TestUpgradeIdentity_Error(t *testing.T) {
 
 	t.Run("NoTarget", func(t *testing.T) {
 		noTarget := map[string]string{}
-		noTargetEncoded, _ := base64_json.Encode(noTarget)
+		noTargetEncoded, _ := identity.Encode(noTarget)
 		_, err := identity.UpgradeIdentity(*noTargetEncoded)
 		if err == nil {
 			t.Fatal("no error upgrading identity")
@@ -352,7 +351,7 @@ func TestUpgradeIdentity_Error(t *testing.T) {
 			"target": "email",
 		}
 
-		fakeIdentityEncoded, _ := base64_json.Encode(fakeIdentity)
+		fakeIdentityEncoded, _ := identity.Encode(fakeIdentity)
 		_, err := identity.UpgradeIdentity(*fakeIdentityEncoded)
 		if err == nil {
 			t.Fatal("no error upgrading identity")
