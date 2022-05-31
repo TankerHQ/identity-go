@@ -3,6 +3,7 @@ package identity
 import (
 	"encoding/base64"
 	"fmt"
+
 	"github.com/TankerHQ/identity-go/v3/internal/app"
 )
 

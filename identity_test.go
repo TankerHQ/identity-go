@@ -5,11 +5,12 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"io"
+	"testing"
+
 	"github.com/TankerHQ/identity-go/v3"
 	"github.com/TankerHQ/identity-go/v3/internal/app"
 	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
-	"io"
-	"testing"
 )
 
 func byteArray(n int) []byte {

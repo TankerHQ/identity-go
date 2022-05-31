@@ -3,8 +3,9 @@ package base64_json
 import (
 	"encoding/base64"
 	"encoding/json"
-	"github.com/iancoleman/orderedmap"
 	"sort"
+
+	"github.com/iancoleman/orderedmap"
 )
 
 var (

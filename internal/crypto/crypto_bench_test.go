@@ -1,8 +1,9 @@
 package crypto_test
 
 import (
-	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 	"testing"
+
+	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 )
 
 func BenchmarkNewKeyPair(b *testing.B) {
