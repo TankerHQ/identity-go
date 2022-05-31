@@ -7,7 +7,6 @@ import (
 	"errors"
 
 	"github.com/TankerHQ/identity-go/v3/internal/app"
-	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"github.com/TankerHQ/identity-go/v3/internal/crypto"
 	"github.com/iancoleman/orderedmap"
 	"golang.org/x/crypto/blake2b"
@@ -52,7 +51,7 @@ func Create(config Config, userID string) (*string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return base64_json.Encode(identity)
+	return Encode(identity)
 }
 
 // CreateProvisional returns a new provisional identity crafted from
@@ -71,7 +70,7 @@ func CreateProvisional(config Config, target string, value string) (*string, err
 	if err != nil {
 		return nil, err
 	}
-	return base64_json.Encode(provisional)
+	return Encode(provisional)
 }
 
 // GetPublicIdentity returns the public identity associated with the
@@ -85,7 +84,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 	}
 
 	publicIdentity := new(anyPublicIdentity)
-	if err := base64_json.Decode(b64Identity, publicIdentity); err != nil {
+	if err := Decode(b64Identity, publicIdentity); err != nil {
 		return nil, err
 	}
 
@@ -102,7 +101,7 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		// in practice this case should never happen since we are decoding into a
 		// more permissive type, and we already decoded above so there should be
 		// no problem with b64Identity itself
-		if err := base64_json.Decode(b64Identity, &privateIdentity); err != nil {
+		if err := Decode(b64Identity, &privateIdentity); err != nil {
 			return nil, err
 		}
 		privateSignatureKey := privateIdentity.PrivateSignatureKey
@@ -118,14 +117,14 @@ func GetPublicIdentity(b64Identity string) (*string, error) {
 		publicIdentity.Target = "hashed_" + publicIdentity.Target
 	}
 
-	return base64_json.Encode(publicIdentity)
+	return Encode(publicIdentity)
 }
 
 // UpgradeIdentity upgrades the provided identity if needed and returns
 // the result of the upgrade
 func UpgradeIdentity(b64Identity string) (*string, error) {
 	identity := orderedmap.New()
-	if err := base64_json.Decode(b64Identity, &identity); err != nil {
+	if err := Decode(b64Identity, &identity); err != nil {
 		return nil, err
 	}
 
@@ -146,7 +145,7 @@ func UpgradeIdentity(b64Identity string) (*string, error) {
 		identity.Set("value", base64.StdEncoding.EncodeToString(hashedEmail[:]))
 	}
 
-	return base64_json.Encode(identity)
+	return Encode(identity)
 }
 
 func checkKeysIntegrity(config config) error {

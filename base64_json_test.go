@@ -1,11 +1,11 @@
-package base64_json_test
+package identity_test
 
 import (
 	"errors"
 	"fmt"
+	"github.com/TankerHQ/identity-go/v3"
 	"testing"
 
-	"github.com/TankerHQ/identity-go/v3/internal/base64_json"
 	"github.com/iancoleman/orderedmap"
 )
 
@@ -115,13 +115,13 @@ var (
 func TestEncodeDecode(t *testing.T) {
 	for _, vec := range testVectors {
 		t.Run(vec.desc, func(t *testing.T) {
-			buf, err := base64_json.Encode(vec.data)
+			buf, err := identity.Encode(vec.data)
 			if err != nil {
 				t.Fatal(vec.desc, "encode failed")
 			}
 
 			ordered := orderedmap.New()
-			err = base64_json.Decode(*buf, &ordered)
+			err = identity.Decode(*buf, &ordered)
 			if err != nil {
 				t.Fatal(vec.desc, "decode failed")
 			}
@@ -157,14 +157,14 @@ func TestEncode_Error(t *testing.T) {
 	)
 
 	t.Run("Marshal", func(t *testing.T) {
-		_, err := base64_json.Encode(errorMa)
+		_, err := identity.Encode(errorMa)
 		if err == nil {
 			t.Fatal("no error on marshal error")
 		}
 	})
 
 	t.Run("Unmarshal", func(t *testing.T) {
-		_, err := base64_json.Encode(errorMaToUn)
+		_, err := identity.Encode(errorMaToUn)
 		if err == nil {
 			t.Fatal("no error on unmarshal error")
 		}
@@ -174,7 +174,7 @@ func TestEncode_Error(t *testing.T) {
 func TestDecode_Error(t *testing.T) {
 	notBase64 := "that's a plain string"
 	var i interface{}
-	err := base64_json.Decode(notBase64, &i)
+	err := identity.Decode(notBase64, &i)
 	if err == nil {
 		t.Fatal("no error on decode with plain string")
 	}
