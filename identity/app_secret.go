@@ -1,10 +1,10 @@
 package identity
 
 import (
-	identity2 "github.com/TankerHQ/identity-go/v3"
+	"github.com/TankerHQ/identity-go/v3/internal/app"
 )
 
 // DEPRECATED: use github.com/TankerHQ/identity-go/v3
 
-const AppSecretSize = identity2.AppSecretSize
-const AppPublicKeySize = identity2.AppPublicKeySize
+const AppSecretSize = app.AppSecretSize
+const AppPublicKeySize = app.AppPublicKeySize
