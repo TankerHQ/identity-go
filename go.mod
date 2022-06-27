@@ -1,10 +1,10 @@
 module github.com/TankerHQ/identity-go/v3
 
-go 1.12
+go 1.17
 
 require (
 	github.com/iancoleman/orderedmap v0.2.0
-	github.com/onsi/ginkgo v1.8.0
-	github.com/onsi/gomega v1.5.0
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 )
+
+require golang.org/x/sys v0.0.0-20210615035016-665e8c7367d1 // indirect

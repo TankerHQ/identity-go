@@ -14,18 +14,21 @@ func hashUserID(trustchainID []byte, userIDString string) []byte {
 	return hashedUserID[:]
 }
 
-func createUserSecret(userID []byte) []byte {
+func newUserSecret(userID []byte) []byte {
 	randdata := make([]byte, userSecretSize-1)
-	_, _ = rand.Read(randdata)
+	_, err := rand.Read(randdata)
+	if err != nil {
+		panic("random failed: " + err.Error())
+	}
 	check := oneByteGenericHash(append(randdata, userID...))
 	return append(randdata, check)
 }
 
 func oneByteGenericHash(input []byte) byte {
-	hash, err := blake2b.New(16, []byte{})
+	hash, err := blake2b.New(16, nil)
 	if err != nil {
 		panic("hash failed: " + err.Error())
 	}
-	_, _ = hash.Write(input)
-	return hash.Sum([]byte{})[0]
+	hash.Write(input)
+	return hash.Sum(nil)[0]
 }
