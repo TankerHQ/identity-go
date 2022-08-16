@@ -14,7 +14,7 @@ import (
 
 func byteArray(n int) []byte {
 	buf := make([]byte, n)
-	rand.Read(buf)
+	rand.Read(buf) //nolint: errcheck
 	return buf
 }
 
@@ -150,7 +150,10 @@ func TestCreate_Error(t *testing.T) {
 		}()
 
 		rand.Reader = &singleSuccessReader{r: r, n: 0}
-		identity.Create(validConf, "userID")
+		_, err := identity.Create(validConf, "userID")
+		if err != nil {
+			t.Fatal("error creating identity")
+		}
 	})
 }
 
