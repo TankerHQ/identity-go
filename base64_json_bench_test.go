@@ -1,8 +1,9 @@
 package identity_test
 
 import (
-	"github.com/TankerHQ/identity-go/v3"
 	"testing"
+
+	"github.com/TankerHQ/identity-go/v3"
 
 	"github.com/iancoleman/orderedmap"
 )
@@ -57,7 +58,7 @@ func BenchmarkEncode(b *testing.B) {
 	for _, vec := range benchVecs {
 		b.Run(vec.desc, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				identity.Encode(vec.data)
+				identity.Encode(vec.data) //nolint: errcheck
 			}
 		})
 	}
@@ -67,6 +68,6 @@ func BenchmarkDecode(b *testing.B) {
 	encoded, _ := identity.Encode(benchStructValue)
 	into := make(map[string]interface{})
 	for i := 0; i < b.N; i++ {
-		identity.Decode(*encoded, &into)
+		identity.Decode(*encoded, &into) //nolint: errcheck
 	}
 }

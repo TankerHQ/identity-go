@@ -17,7 +17,7 @@ func TestGetAppId(t *testing.T) {
 
 	id1 := app.GetAppId(appSecret)
 	id2 := app.GetAppId(appSecret)
-	if bytes.Compare(id1, id2) != 0 {
+	if !bytes.Equal(id1, id2) {
 		t.Fatal("app IDs should be equal for same app secret")
 	}
 }

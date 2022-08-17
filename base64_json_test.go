@@ -2,9 +2,9 @@ package identity_test
 
 import (
 	"errors"
-	"fmt"
-	"github.com/TankerHQ/identity-go/v3"
 	"testing"
+
+	"github.com/TankerHQ/identity-go/v3"
 
 	"github.com/iancoleman/orderedmap"
 )
@@ -129,7 +129,7 @@ func TestEncodeDecode(t *testing.T) {
 			var previousKey string
 			for i, key := range ordered.Keys() {
 				if i != 0 && order[key] < order[previousKey] {
-					t.Fatal(fmt.Sprintf("%s should sort before %s", previousKey, key))
+					t.Fatalf("%s should sort before %s", previousKey, key)
 				}
 				previousKey = key
 			}
